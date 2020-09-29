@@ -89,11 +89,7 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
     }
   }
 
-<<<<<<< HEAD
   if (fabs((internal_time_ - control_time_).toSec()) < 1e-3){
-=======
-  if (internal_time_ == control_time_){
->>>>>>> 3ed95b1acd0f900fa23e6f7838b4fd481a32ab9c
     ROS_INFO_STREAM("Done");
     std::cout << cnt_ <<std::endl;
   }
