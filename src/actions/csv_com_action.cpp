@@ -5,6 +5,7 @@
 using namespace math_utils;
 using namespace pal_robot_tools;
 
+rapidcsv::Document csv_com_reader_("${HOME}/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/com_trajectory.csv");
 namespace pal_locomotion
 {
 CSVCOMAction::CSVCOMAction()
@@ -36,14 +37,12 @@ bool CSVCOMAction::configure(ros::NodeHandle &nh, BController *bController,
 bool CSVCOMAction::enterHook(const ros::Time &time)
 {
   support_type_ = bc_->getActualSupportType();
-  // read csv
-  csv_com_reader_ = new rapidcsv::Document(std::string("${HOME}/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/") + parameters_.filename_, rapidcsv::LabelParams(-1, -1));
-  // 
-  int csv_size = csv_com_reader_->GetColumn<float>(0).size();
-  std::cout <<csv_com_reader_->GetRow<float>(csv_size-1)[0]   << std::endl;
+ 
+  // int csv_size = csv_com_reader_->GetColumn<float>(0).size();
+  // std::cout <<csv_com_reader_->GetRow<float>(csv_size-1)[0]   << std::endl;
 
   internal_time_ = time;
-  control_time_ = internal_time_ + ros::Duration( csv_com_reader_->GetRow<float>(csv_size-1)[0]  );
+  control_time_ = internal_time_ + ros::Duration( 5.0 );
   actual_com_= bc_->getActualCOMPosition();
   cnt_ = 0;
 
@@ -74,6 +73,8 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
   pal::convert(local_coordinate_frame, local_coordinate_frame_2d);
 
   eVector3 targetCOM, targetCOM_vel;
+  targetCOM = actual_com_;
+  targetCOM_vel.setZero();
   // if (internal_time_ < control_time_){
   //   targetCOM = actual_com_ + csv_com_reader_->row(cnt_).head(3);
   //   targetCOM_vel =  csv_com_reader_->row(cnt_).segment(3, 3);

@@ -68,7 +68,6 @@ private:
 
 
   CSVCOMActionParameters parameters_;
-  rapidcsv::Document* csv_com_reader_;
   eVector3 actual_com_;
   math_utils::HighPassRateLimiterVector2dPtr rate_limiter_;
   eVector2 targetCOP_rate_limited_unclamped_;
