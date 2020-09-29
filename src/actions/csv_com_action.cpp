@@ -73,23 +73,29 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
   eVector3 targetCOM, targetCOM_vel;
   targetCOM = actual_com_;
   targetCOM_vel.setZero();
-  if (internal_time_ < control_time_){
+
+  if (cnt_ < csv_com_reader_.GetRowCount()){
     for (int i=1 ; i<4; i++) {
           targetCOM(i-1) = actual_com_(i-1)+ csv_com_reader_.GetRow<float>(cnt_)[i] - csv_com_reader_.GetRow<float>(0)[i];
           targetCOM_vel(i-1) =  csv_com_reader_.GetRow<float>(cnt_)[i+3];
     }
-    cnt_++;
+    cnt_ += 2;
   }
-  else if (internal_time_ >= control_time_)
+  else
   {
     for (int i=1 ; i<4; i++) {
-     targetCOM(i-1) = actual_com_(i-1) + csv_com_reader_.GetRow<float>(cnt_-1)[i] - csv_com_reader_.GetRow<float>(0)[i];
-     targetCOM_vel(i-1) =  csv_com_reader_.GetRow<float>(cnt_-1)[i+3];
+     targetCOM(i-1) = actual_com_(i-1) + csv_com_reader_.GetRow<float>(csv_com_reader_.GetRowCount()-1)[i] - csv_com_reader_.GetRow<float>(0)[i];
+     targetCOM_vel(i-1) =  csv_com_reader_.GetRow<float>(csv_com_reader_.GetRowCount()-1)[i+3];
     }
   }
 
+<<<<<<< HEAD
+  if (fabs((internal_time_ - control_time_).toSec()) < 1e-3){
+=======
   if (internal_time_ == control_time_){
+>>>>>>> 3ed95b1acd0f900fa23e6f7838b4fd481a32ab9c
     ROS_INFO_STREAM("Done");
+    std::cout << cnt_ <<std::endl;
   }
 
   eVector2 global_target_cop = targetCOM.head(2);
