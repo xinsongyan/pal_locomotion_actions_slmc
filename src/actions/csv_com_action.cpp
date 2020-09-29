@@ -88,7 +88,7 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
     }
   }
 
-  if (internal_time_ >= control_time_){
+  if (internal_time_ == control_time_){
     ROS_INFO_STREAM("Done");
   }
 
