@@ -38,9 +38,9 @@ bool CSVCOMAction::enterHook(const ros::Time &time)
 {
   support_type_ = bc_->getActualSupportType();
 
-  int csv_size = csv_com_reader_.GetColumnCount();
+  int csv_size = csv_com_reader_.GetRowCount();
   internal_time_ = time;
-  control_time_ = internal_time_ + ros::Duration(3.95);
+  control_time_ = internal_time_ + ros::Duration(csv_com_reader_.GetRow<float>(csv_size-1)[0]);
   actual_com_= bc_->getActualCOMPosition();
   cnt_ = 0;
 
