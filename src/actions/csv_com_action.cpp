@@ -49,6 +49,7 @@ bool CSVCOMAction::enterHook(const ros::Time &time)
 
 bool CSVCOMAction::cycleHook(const ros::Time &time)
 {
+ 
   eMatrixHom actual_left_foot_pose = bc_->getActualFootPose(+Side::LEFT);
   eMatrixHom actual_right_foot_pose = bc_->getActualFootPose(+Side::RIGHT);
 
@@ -79,7 +80,7 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
           targetCOM(i-1) = actual_com_(i-1)+ csv_com_reader_.GetRow<float>(cnt_)[i] - csv_com_reader_.GetRow<float>(0)[i];
           targetCOM_vel(i-1) =  csv_com_reader_.GetRow<float>(cnt_)[i+3];
     }
-    cnt_ += 2;
+    cnt_ += 1;
   }
   else
   {
