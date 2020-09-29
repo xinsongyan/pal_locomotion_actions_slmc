@@ -1,0 +1,57 @@
+<library path="lib/libpal_locomotion_actions_slmc_plugins">
+
+  <class name="pal_locomotion::BalanceDsAction" type="pal_locomotion::BalanceDsAction" base_class_type="pal_locomotion::WalkingActionBase">
+    <description>
+     Action
+    </description>
+  </class>
+
+  <class name="pal_locomotion::BalancingAction" type="pal_locomotion::BalancingAction" base_class_type="pal_locomotion::WalkingActionBase">
+    <description>
+     Action
+    </description>
+  </class>
+
+  <class name="pal_locomotion::StaticWalkAction" type="pal_locomotion::StaticWalkAction" base_class_type="pal_locomotion::WalkingActionBase">
+    <description>
+     Action
+    </description>
+  </class>
+
+  <class name="pal_locomotion::WBCAction" type="pal_locomotion::WBCAction" base_class_type="pal_locomotion::WalkingActionBase">
+    <description>
+     Action
+    </description>
+  </class>
+
+  <class name="pal_locomotion::MoveICPDSAction" type="pal_locomotion::MoveICPDSAction" base_class_type="pal_locomotion::WalkingActionBase">
+    <description>
+     Action
+    </description>
+  </class>
+
+  <class name="pal_locomotion::SStandOneLegAction" type="pal_locomotion::SStandOneLegAction" base_class_type="pal_locomotion::WalkingActionBase">
+    <description>
+    Action
+   </description>
+  </class>
+
+  <class name="pal_locomotion::StandDownLegAction" type="pal_locomotion::StandDownLegAction" base_class_type="pal_locomotion::WalkingActionBase">
+    <description>
+    Action
+  </description>
+  </class>
+  
+  <class name="pal_locomotion::COMAction" type="pal_locomotion::COMAction" base_class_type="pal_locomotion::WalkingActionBase">
+    <description>
+    Action
+  </description>
+  </class>
+
+  <class name="pal_locomotion::CSVCOMAction" type="pal_locomotion::CSVCOMAction" base_class_type="pal_locomotion::WalkingActionBase">
+    <description>
+    Action
+  </description>
+  </class>
+</library>
+
