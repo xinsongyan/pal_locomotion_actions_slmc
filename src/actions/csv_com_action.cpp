@@ -5,7 +5,7 @@
 using namespace math_utils;
 using namespace pal_robot_tools;
 
-rapidcsv::Document csv_com_reader_("${HOME}/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/com_trajectory.csv");
+rapidcsv::Document csv_com_reader_("/home/user/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/com_trajectory.csv");
 namespace pal_locomotion
 {
 CSVCOMAction::CSVCOMAction()
@@ -37,12 +37,10 @@ bool CSVCOMAction::configure(ros::NodeHandle &nh, BController *bController,
 bool CSVCOMAction::enterHook(const ros::Time &time)
 {
   support_type_ = bc_->getActualSupportType();
- 
-  // int csv_size = csv_com_reader_->GetColumn<float>(0).size();
-  // std::cout <<csv_com_reader_->GetRow<float>(csv_size-1)[0]   << std::endl;
 
+  int csv_size = csv_com_reader_.GetColumnCount();
   internal_time_ = time;
-  control_time_ = internal_time_ + ros::Duration( 5.0 );
+  control_time_ = internal_time_ + ros::Duration(3.95);
   actual_com_= bc_->getActualCOMPosition();
   cnt_ = 0;
 
@@ -75,18 +73,22 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
   eVector3 targetCOM, targetCOM_vel;
   targetCOM = actual_com_;
   targetCOM_vel.setZero();
-  // if (internal_time_ < control_time_){
-  //   targetCOM = actual_com_ + csv_com_reader_->row(cnt_).head(3);
-  //   targetCOM_vel =  csv_com_reader_->row(cnt_).segment(3, 3);
-  //   cnt_++;
-  // }
-  // else if (internal_time_ >= control_time_)
-  // {
-  //   targetCOM = actual_com_ + csv_com_reader_->row(cnt_-1).head(3);
-  //   targetCOM_vel =  csv_com_reader_->row(cnt_-1).segment(3, 3);
-  // }
+  if (internal_time_ < control_time_){
+    for (int i=1 ; i<4; i++) {
+          targetCOM(i-1) = actual_com_(i-1)+ csv_com_reader_.GetRow<float>(cnt_)[i] - csv_com_reader_.GetRow<float>(0)[i];
+          targetCOM_vel(i-1) =  csv_com_reader_.GetRow<float>(cnt_)[i+3];
+    }
+    cnt_++;
+  }
+  else if (internal_time_ >= control_time_)
+  {
+    for (int i=1 ; i<4; i++) {
+     targetCOM(i-1) = actual_com_(i-1) + csv_com_reader_.GetRow<float>(cnt_-1)[i] - csv_com_reader_.GetRow<float>(0)[i];
+     targetCOM_vel(i-1) =  csv_com_reader_.GetRow<float>(cnt_-1)[i+3];
+    }
+  }
 
-  if (internal_time_ == control_time_){
+  if (internal_time_ >= control_time_){
     ROS_INFO_STREAM("Done");
   }
 
