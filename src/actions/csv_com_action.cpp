@@ -5,7 +5,7 @@
 using namespace math_utils;
 using namespace pal_robot_tools;
 
-rapidcsv::Document csv_com_reader_("/home/user/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/com_trajectory.csv");
+rapidcsv::Document csv_com_reader_("/home/xin/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/com_trajectory.csv");
 namespace pal_locomotion
 {
 CSVCOMAction::CSVCOMAction()

@@ -1,3 +1,19 @@
+
+# PAL Locomotion Actions SLMC
+## how to run the simulation
+```
+$ roslaunch talos_gazebo talos_gazebo.launch
+``` 
+
+```
+$ roslaunch talos_pal_locomotion talos_dcm_walking_controller.launch estimator:=kinematic_estimator_params
+```
+
+
+```
+$ rosrun pal_locomotion_actions_slmc push_csv_com_action -f 'com_trajectory.csv'
+```
+
 # PAL Locomotion Actions
 
 This package contains the main actions that are already implemented for the Biped DCM controller state machine.
@@ -113,3 +129,4 @@ And to lower the leg
 ```
 $ rosrun pal_locomotion_actions push_stand_down_leg_action -d 3.0 -u 3.0
 ```
+
