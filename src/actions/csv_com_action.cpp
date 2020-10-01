@@ -5,6 +5,12 @@
 using namespace math_utils;
 using namespace pal_robot_tools;
 
+
+#include <ros/ros.h>
+
+//ros::init("param_loader");
+
+
 rapidcsv::Document csv_com_reader_("/home/xin/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/com_trajectory.csv");
 namespace pal_locomotion
 {
@@ -30,6 +36,30 @@ bool CSVCOMAction::configure(ros::NodeHandle &nh, BController *bController,
 
   pb.getPropertyValue<std::string>("filename", parameters_.filename_,
                               property_bag::RetrievalHandling::THROW);
+
+
+    std::string key;
+    if (nh.searchParam("com_trajectory/t", key))
+    {
+        std::cout << "found "<< key << std::endl;
+    }else{
+        std::cout << "nothing found "<< std::endl;
+    }
+
+    std::string test_string;
+    if (nh.getParam("/param/string", test_string)){
+        ROS_INFO_STREAM("Successfully load /param/string from ros parameter server!");
+    }else{
+        ROS_INFO_STREAM("Fail to load /param/string from ros parameter server!");
+    }
+
+    std::vector<double> t;
+    if (nh.getParam("com_trajectory/t", t)){
+        ROS_INFO_STREAM("Successfully load com_trajectory/t from ros parameter server!");
+    }else{
+        ROS_INFO_STREAM("Fail to load com_trajectory/t from ros parameter server!");
+    }
+
 
   return true;
 }
