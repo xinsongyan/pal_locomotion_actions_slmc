@@ -38,31 +38,67 @@ bool CSVCOMAction::configure(ros::NodeHandle &nh, BController *bController,
                               property_bag::RetrievalHandling::THROW);
 
 
-    std::string key;
-    if (nh.searchParam("com_trajectory/t", key))
-    {
-        std::cout << "found "<< key << std::endl;
-    }else{
-        std::cout << "nothing found "<< std::endl;
-    }
-
-    std::string test_string;
-    if (nh.getParam("/param/string", test_string)){
-        ROS_INFO_STREAM("Successfully load /param/string from ros parameter server!");
-    }else{
-        ROS_INFO_STREAM("Fail to load /param/string from ros parameter server!");
-    }
-
-    std::vector<double> t;
-    if (nh.getParam("com_trajectory/t", t)){
-        ROS_INFO_STREAM("Successfully load com_trajectory/t from ros parameter server!");
-    }else{
-        ROS_INFO_STREAM("Fail to load com_trajectory/t from ros parameter server!");
-    }
+  getComTrajectory(nh);
 
 
   return true;
 }
+
+bool CSVCOMAction::getComTrajectory(ros::NodeHandle &nh){
+
+    std::string key = "/com_trajectory/t";
+    if (nh.getParam(key, com_trajectory_t_)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+
+    key = "/com_trajectory/pos/x";
+    if (nh.getParam(key, com_trajectory_pos_x_)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+
+    key = "/com_trajectory/pos/y";
+    if (nh.getParam(key, com_trajectory_pos_y_)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+
+    key = "/com_trajectory/pos/z";
+    if (nh.getParam(key, com_trajectory_pos_z_)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+
+    key = "/com_trajectory/vel/x";
+    if (nh.getParam(key, com_trajectory_vel_x_)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+
+    key = "/com_trajectory/vel/y";
+    if (nh.getParam(key, com_trajectory_vel_y_)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+
+    key = "/com_trajectory/vel/z";
+    if (nh.getParam(key, com_trajectory_vel_z_)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+
+
+}
+
+
 
 bool CSVCOMAction::enterHook(const ros::Time &time)
 {
@@ -105,20 +141,41 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
   targetCOM = actual_com_;
   targetCOM_vel.setZero();
 
-  if (cnt_ < csv_com_reader_.GetRowCount()){
-    for (int i=1 ; i<4; i++) {
-          targetCOM(i-1) = actual_com_(i-1)+ csv_com_reader_.GetRow<float>(cnt_)[i] - csv_com_reader_.GetRow<float>(0)[i];
-          targetCOM_vel(i-1) =  csv_com_reader_.GetRow<float>(cnt_)[i+3];
+//  if (cnt_ < csv_com_reader_.GetRowCount()){
+//    for (int i=1 ; i<4; i++) {
+//          targetCOM(i-1) = actual_com_(i-1)+ csv_com_reader_.GetRow<float>(cnt_)[i] - csv_com_reader_.GetRow<float>(0)[i];
+//          targetCOM_vel(i-1) =  csv_com_reader_.GetRow<float>(cnt_)[i+3];
+//    }
+//    cnt_ += 1;
+//  }
+//  else
+//  {
+//    for (int i=1 ; i<4; i++) {
+//     targetCOM(i-1) = actual_com_(i-1) + csv_com_reader_.GetRow<float>(csv_com_reader_.GetRowCount()-1)[i] - csv_com_reader_.GetRow<float>(0)[i];
+//     targetCOM_vel(i-1) =  csv_com_reader_.GetRow<float>(csv_com_reader_.GetRowCount()-1)[i+3];
+//    }
+//  }
+
+
+    if (cnt_ < csv_com_reader_.GetRowCount()){
+        targetCOM(0) = actual_com_[0] + com_trajectory_pos_x_[cnt_] - com_trajectory_pos_x_[0];
+        targetCOM(1) = actual_com_[1] + com_trajectory_pos_y_[cnt_] - com_trajectory_pos_y_[0];
+        targetCOM(2) = actual_com_[2] + com_trajectory_pos_z_[cnt_] - com_trajectory_pos_z_[0];
+        targetCOM_vel(0) = com_trajectory_vel_x_[cnt_];
+        targetCOM_vel(1) = com_trajectory_vel_y_[cnt_];
+        targetCOM_vel(2) = com_trajectory_vel_z_[cnt_];
+        cnt_ += 1;
     }
-    cnt_ += 1;
-  }
-  else
-  {
-    for (int i=1 ; i<4; i++) {
-     targetCOM(i-1) = actual_com_(i-1) + csv_com_reader_.GetRow<float>(csv_com_reader_.GetRowCount()-1)[i] - csv_com_reader_.GetRow<float>(0)[i];
-     targetCOM_vel(i-1) =  csv_com_reader_.GetRow<float>(csv_com_reader_.GetRowCount()-1)[i+3];
+    else
+    {
+        targetCOM(0) = actual_com_[0] + com_trajectory_pos_x_[cnt_] - com_trajectory_pos_x_[0];
+        targetCOM(1) = actual_com_[1] + com_trajectory_pos_y_[cnt_] - com_trajectory_pos_y_[0];
+        targetCOM(2) = actual_com_[2] + com_trajectory_pos_z_[cnt_] - com_trajectory_pos_z_[0];
+        targetCOM_vel(0) = com_trajectory_vel_x_[cnt_];
+        targetCOM_vel(1) = com_trajectory_vel_y_[cnt_];
+        targetCOM_vel(2) = com_trajectory_vel_z_[cnt_];
     }
-  }
+
 
   if (fabs((internal_time_ - control_time_).toSec()) < 1e-3){
     ROS_INFO_STREAM("Done");

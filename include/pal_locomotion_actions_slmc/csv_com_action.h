@@ -55,6 +55,9 @@ public:
 
   bool endHook(const ros::Time &time) override;
 
+  bool getComTrajectory(ros::NodeHandle &nh);
+
+
 private:
   bool configure_interpolator_;
   bool initial_interpolation_;
@@ -72,6 +75,15 @@ private:
   math_utils::HighPassRateLimiterVector2dPtr rate_limiter_;
   eVector2 targetCOP_rate_limited_unclamped_;
   eVector2 targetCOP_unclamped_;
+
+    // com trajectory container
+    std::vector<double> com_trajectory_t_;
+    std::vector<double> com_trajectory_pos_x_;
+    std::vector<double> com_trajectory_pos_y_;
+    std::vector<double> com_trajectory_pos_z_;
+    std::vector<double> com_trajectory_vel_x_;
+    std::vector<double> com_trajectory_vel_y_;
+    std::vector<double> com_trajectory_vel_z_;
 
 };
 }
