@@ -52,6 +52,7 @@ bool CSVCOMAction::getComTrajectory(ros::NodeHandle &nh){
     }else{
         ROS_INFO_STREAM("Fail to load " + key);
     }
+    com_t_ = Eigen::Map<Eigen::VectorXd>(com_trajectory_t_.data(), com_trajectory_t_.size());
 
     key = "/com_trajectory/pos/x";
     if (nh.getParam(key, com_trajectory_pos_x_)){
@@ -74,6 +75,8 @@ bool CSVCOMAction::getComTrajectory(ros::NodeHandle &nh){
         ROS_INFO_STREAM("Fail to load " + key);
     }
 
+
+
     key = "/com_trajectory/vel/x";
     if (nh.getParam(key, com_trajectory_vel_x_)){
         ROS_INFO_STREAM("Successfully load " + key);
@@ -95,9 +98,27 @@ bool CSVCOMAction::getComTrajectory(ros::NodeHandle &nh){
         ROS_INFO_STREAM("Fail to load " + key);
     }
 
+    Eigen::VectorXd com_pos_x_ = std2eigen(com_trajectory_pos_x_);
+    Eigen::VectorXd com_pos_y_ = std2eigen(com_trajectory_pos_y_);
+    Eigen::VectorXd com_pos_z_ = std2eigen(com_trajectory_pos_z_);
 
+    com_pos_.resize(3, com_pos_x_.size());
+    com_pos_ << com_pos_x_.transpose(), com_pos_y_.transpose(), com_pos_z_.transpose();
+    ROS_INFO_STREAM("com_pos done.");
+
+    Eigen::VectorXd com_vel_x_ = std2eigen(com_trajectory_vel_x_);
+    Eigen::VectorXd com_vel_y_ = std2eigen(com_trajectory_vel_y_);
+    Eigen::VectorXd com_vel_z_ = std2eigen(com_trajectory_vel_z_);
+
+    com_vel_.resize(3, com_vel_x_.size());
+    com_vel_ << com_vel_x_.transpose(), com_vel_y_.transpose(), com_vel_z_.transpose();
+    ROS_INFO_STREAM("com_vel_ done.");
 }
 
+Eigen::VectorXd CSVCOMAction::std2eigen(std::vector<double> std_vec){
+    Eigen::VectorXd eigen_vec = Eigen::Map<Eigen::VectorXd>(std_vec.data(), std_vec.size());
+    return eigen_vec;
+}
 
 
 bool CSVCOMAction::enterHook(const ros::Time &time)
@@ -157,23 +178,35 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
 //  }
 
 
-    if (cnt_ < csv_com_reader_.GetRowCount()){
-        targetCOM(0) = actual_com_[0] + com_trajectory_pos_x_[cnt_] - com_trajectory_pos_x_[0];
-        targetCOM(1) = actual_com_[1] + com_trajectory_pos_y_[cnt_] - com_trajectory_pos_y_[0];
-        targetCOM(2) = actual_com_[2] + com_trajectory_pos_z_[cnt_] - com_trajectory_pos_z_[0];
-        targetCOM_vel(0) = com_trajectory_vel_x_[cnt_];
-        targetCOM_vel(1) = com_trajectory_vel_y_[cnt_];
-        targetCOM_vel(2) = com_trajectory_vel_z_[cnt_];
+//    if (cnt_ < csv_com_reader_.GetRowCount()){
+//        targetCOM(0) = actual_com_[0] + com_trajectory_pos_x_[cnt_] - com_trajectory_pos_x_[0];
+//        targetCOM(1) = actual_com_[1] + com_trajectory_pos_y_[cnt_] - com_trajectory_pos_y_[0];
+//        targetCOM(2) = actual_com_[2] + com_trajectory_pos_z_[cnt_] - com_trajectory_pos_z_[0];
+//        targetCOM_vel(0) = com_trajectory_vel_x_[cnt_];
+//        targetCOM_vel(1) = com_trajectory_vel_y_[cnt_];
+//        targetCOM_vel(2) = com_trajectory_vel_z_[cnt_];
+//        cnt_ += 1;
+//    }
+//    else
+//    {
+//        targetCOM(0) = actual_com_[0] + com_trajectory_pos_x_[cnt_] - com_trajectory_pos_x_[0];
+//        targetCOM(1) = actual_com_[1] + com_trajectory_pos_y_[cnt_] - com_trajectory_pos_y_[0];
+//        targetCOM(2) = actual_com_[2] + com_trajectory_pos_z_[cnt_] - com_trajectory_pos_z_[0];
+//        targetCOM_vel(0) = com_trajectory_vel_x_[cnt_];
+//        targetCOM_vel(1) = com_trajectory_vel_y_[cnt_];
+//        targetCOM_vel(2) = com_trajectory_vel_z_[cnt_];
+//    }
+
+
+    if (cnt_ < com_pos_.cols()-1){
+        targetCOM = actual_com_ + com_pos_.col(cnt_) - com_pos_.col(0);
+        targetCOM_vel = com_vel_.col(cnt_);
         cnt_ += 1;
     }
     else
     {
-        targetCOM(0) = actual_com_[0] + com_trajectory_pos_x_[cnt_] - com_trajectory_pos_x_[0];
-        targetCOM(1) = actual_com_[1] + com_trajectory_pos_y_[cnt_] - com_trajectory_pos_y_[0];
-        targetCOM(2) = actual_com_[2] + com_trajectory_pos_z_[cnt_] - com_trajectory_pos_z_[0];
-        targetCOM_vel(0) = com_trajectory_vel_x_[cnt_];
-        targetCOM_vel(1) = com_trajectory_vel_y_[cnt_];
-        targetCOM_vel(2) = com_trajectory_vel_z_[cnt_];
+        targetCOM = actual_com_ + com_pos_.col(cnt_) - com_pos_.col(0);
+        targetCOM_vel = com_vel_.col(cnt_);
     }
 
 
@@ -190,7 +223,7 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
 
   bc_->setDesiredBaseOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
   bc_->setDesiredTorsoOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
-  
+
   internal_time_ += bc_->getControllerDt();
 
   return true;
