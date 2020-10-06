@@ -102,7 +102,7 @@ bool CSVCOMAction::getComTrajectory(ros::NodeHandle &nh){
 
     com_pos_.resize(3, com_pos_x_.size());
     com_pos_ << com_pos_x_.transpose(), com_pos_y_.transpose(), com_pos_z_.transpose();
-    ROS_INFO_STREAM("com_pos done.");
+    ROS_INFO_STREAM("eigen com_pos generated.");
 
     Eigen::VectorXd com_vel_x_ = std2eigen(com_trajectory_vel_x_);
     Eigen::VectorXd com_vel_y_ = std2eigen(com_trajectory_vel_y_);
@@ -110,7 +110,7 @@ bool CSVCOMAction::getComTrajectory(ros::NodeHandle &nh){
 
     com_vel_.resize(3, com_vel_x_.size());
     com_vel_ << com_vel_x_.transpose(), com_vel_y_.transpose(), com_vel_z_.transpose();
-    ROS_INFO_STREAM("com_vel_ done.");
+    ROS_INFO_STREAM("eigen com_vel generated.");
 }
 
 Eigen::VectorXd CSVCOMAction::std2eigen(std::vector<double> std_vec){
@@ -175,7 +175,6 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
 
   if (fabs((internal_time_ - control_time_).toSec()) < 1e-3){
     ROS_INFO_STREAM("Done");
-    std::cout << cnt_ <<std::endl;
   }
 
   eVector2 global_target_cop = targetCOM.head(2);
