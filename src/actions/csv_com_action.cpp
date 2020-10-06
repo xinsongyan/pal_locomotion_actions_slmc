@@ -145,8 +145,7 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
   // define local frame
   if (support_type_ == +SupporType::DS)
   {
-    local_coordinate_frame =
-        interpolateBetweenTransforms(actual_left_foot_pose, actual_right_foot_pose);
+    local_coordinate_frame = interpolateBetweenTransforms(actual_left_foot_pose, actual_right_foot_pose);
   }
   else
   {
@@ -181,8 +180,13 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
 
   eVector2 global_target_cop = targetCOM.head(2);
 
-  control(bc_, rate_limiter_, targetCOM, targetCOM_vel, global_target_cop,
-          parameters_.use_rate_limited_dcm_, targetCOP_rate_limited_unclamped_,
+  control(bc_,
+          rate_limiter_,
+          targetCOM,
+          targetCOM_vel,
+          global_target_cop,
+          parameters_.use_rate_limited_dcm_,
+          targetCOP_rate_limited_unclamped_,
           targetCOP_unclamped_);
 
   bc_->setDesiredBaseOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));

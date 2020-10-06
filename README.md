@@ -9,10 +9,17 @@ $ roslaunch talos_gazebo talos_gazebo.launch
 $ roslaunch talos_pal_locomotion talos_dcm_walking_controller.launch estimator:=kinematic_estimator_params
 ```
 
+run this python script to publish csv trajectory to ros param server
+```
+$ python .../path_to_trajectory_folder/.../trajectory_publisher.py
+```
 
+
+launch the action, the action will load the trajectory from ros param server
 ```
-$ rosrun pal_locomotion_actions_slmc push_csv_com_action -f 'com_trajectory.csv'
+$ rosrun pal_locomotion_actions_slmc push_csv_com_action
 ```
+
 
 # PAL Locomotion Actions
 

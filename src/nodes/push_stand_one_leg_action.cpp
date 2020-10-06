@@ -22,12 +22,9 @@ int main(int argc, char** argv)
 
   Switch help_option("h", "help", "produce help message");
   Value<Side> side_option("s", "side", "side of the stance leg", Side::LEFT, &side);
-
   Value<double> ds_duration_option("d", "ds_duration", "ds duration option", 0., &ds_duration);
-  Value<double> swing_leg_up_time_option("u", "up_time", "swing leg up time option", 0.,
-                                         &swing_leg_up_time);
-  Value<double> swing_leg_height_option("z", "swing_height", "swing leg up height option",
-                                        0., &swing_leg_height);
+  Value<double> swing_leg_up_time_option("u", "up_time", "swing leg up time option", 0., &swing_leg_up_time);
+  Value<double> swing_leg_height_option("z", "swing_height", "swing leg up height option",0., &swing_leg_height);
 
 
   OptionParser op("Allowed options");
@@ -91,14 +88,12 @@ int main(int argc, char** argv)
     if (side == +Side::LEFT)
     {
       listener.lookupTransform("/odom", "/right_sole_link", ros::Time(0), transform_stamped);
-      relative_pose =
-          createMatrix(eQuaternion::Identity(), eVector3(0., 0.0, swing_leg_height));
+      relative_pose = createMatrix(eQuaternion::Identity(), eVector3(0., 0.0, swing_leg_height));
     }
     else
     {
       listener.lookupTransform("/odom", "/left_sole_link", ros::Time(0), transform_stamped);
-      relative_pose =
-          createMatrix(eQuaternion::Identity(), eVector3(0., 0.0, swing_leg_height));
+      relative_pose = createMatrix(eQuaternion::Identity(), eVector3(0., 0.0, swing_leg_height));
     }
   }
   catch (tf2::TransformException& ex)
@@ -120,7 +115,7 @@ int main(int argc, char** argv)
   pal_locomotion_msgs::PushActions push_actions_request;
 
   pal_locomotion_msgs::ActionWithParameters new_action;
-  new_action.action_type = "pal_locomotion::StandOneLegAction";
+  new_action.action_type = "pal_locomotion::SStandOneLegAction";
 
   property_bag::PropertyBag parameters;
   parameters.addProperty("side", std::string(side._to_string()));

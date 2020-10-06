@@ -107,31 +107,38 @@ bool SStandOneLegAction::enterHook(const ros::Time &time)
 
   icp_interpolator_->initialize(
       { internal_time_, ds_time_ },
-      { (local_coordinate_frame.inverse() *
-         interpolateBetweenTransforms(actual_left_foot_pose, actual_right_foot_pose))
-            .translation()
-            .segment(0, 2),
-        offset_ },
-      { eVector2::Zero(), eVector2::Zero() }, { eVector2::Zero(), eVector2::Zero() });
+      { (local_coordinate_frame.inverse() * interpolateBetweenTransforms(actual_left_foot_pose, actual_right_foot_pose)).translation().segment(0, 2), offset_ },
+      { eVector2::Zero(), eVector2::Zero() },
+      { eVector2::Zero(), eVector2::Zero() });
 
   if (parameters_.side_ == +Side::LEFT)
   {
     force_distribution_interpolator_->initialize({ internal_time_, ds_time_ },
-                                                 { 0.5, 1. }, { 0., 0. }, { 0., 0. });
+                                                 { 0.5, 1. },
+                                                 { 0., 0. },
+                                                 { 0., 0. });
   }
   else
   {
     force_distribution_interpolator_->initialize({ internal_time_, ds_time_ },
-                                                 { 0.5, 0. }, { 0., 0. }, { 0., 0. });
+                                                 { 0.5, 0. },
+                                                 { 0., 0. },
+                                                 { 0., 0. });
   }
 
-  bc_->setDesiredFootState(static_cast<int>(+Side::LEFT), actual_left_foot_pose,
-                           eVector3(0., 0., 0.), eVector3(0., 0., 0.),
-                           eVector3(0., 0., 0.), eVector3(0., 0., 0.));
+  bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
+                           actual_left_foot_pose,
+                           eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.));
 
-  bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT), actual_right_foot_pose,
-                           eVector3(0., 0., 0.), eVector3(0., 0., 0.),
-                           eVector3(0., 0., 0.), eVector3(0., 0., 0.));
+  bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
+                           actual_right_foot_pose,
+                           eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.));
 
   bc_->setActualSide(parameters_.side_);
 
@@ -144,16 +151,17 @@ bool SStandOneLegAction::enterHook(const ros::Time &time)
       {
         height_trajectory_.initialize(
             { ds_time_, ds_time_ + ros::Duration(parameters_.swing_leg_duration_[0]) },
-            { actual_left_foot_pose.translation().z() -
-                  actual_right_foot_pose.translation().z(),
-              0. },
-            { 0., 0. }, { 0., 0. });
+            { actual_left_foot_pose.translation().z() - actual_right_foot_pose.translation().z(),0. },
+            { 0., 0. },
+            { 0., 0. });
       }
       else
       {
         height_trajectory_.initialize(
             { ds_time_, ds_time_ + ros::Duration(parameters_.swing_leg_duration_[0]) },
-            { 0., 0. }, { 0., 0. }, { 0., 0. });
+            { 0., 0. },
+            { 0., 0. },
+            { 0., 0. });
       }
     }
     else
@@ -162,16 +170,17 @@ bool SStandOneLegAction::enterHook(const ros::Time &time)
       {
         height_trajectory_.initialize(
             { ds_time_, ds_time_ + ros::Duration(parameters_.swing_leg_duration_[0]) },
-            { actual_right_foot_pose.translation().z() -
-                  actual_left_foot_pose.translation().z(),
-              0. },
-            { 0., 0. }, { 0., 0. });
+            { actual_right_foot_pose.translation().z() - actual_left_foot_pose.translation().z(),0. },
+            { 0., 0. },
+            { 0., 0. });
       }
       else
       {
         height_trajectory_.initialize(
             { ds_time_, ds_time_ + ros::Duration(parameters_.swing_leg_duration_[0]) },
-            { 0., 0. }, { 0., 0. }, { 0., 0. });
+            { 0., 0. },
+            { 0., 0. },
+            { 0., 0. });
       }
     }
   }
@@ -193,14 +202,18 @@ bool SStandOneLegAction::cycleHook(const ros::Time &time)
     eVector2 local_target_dcm;
     eVector2 local_target_dcm_vel;
     eVector2 local_target_dcm_acc;
-    icp_interpolator_->query(internal_time_, local_target_dcm, local_target_dcm_vel,
+    icp_interpolator_->query(internal_time_,
+                             local_target_dcm,
+                             local_target_dcm_vel,
                              local_target_dcm_acc);
 
     double weight_distribution;
     double weight_distribution_d;
     double weight_distribution_dd;
-    force_distribution_interpolator_->query(internal_time_, weight_distribution,
-                                            weight_distribution_d, weight_distribution_dd);
+    force_distribution_interpolator_->query(internal_time_,
+                                            weight_distribution,
+                                            weight_distribution_d,
+                                            weight_distribution_dd);
     bc_->setWeightDistribution(weight_distribution);
 
     eVector2 global_target_dcm = local_coordinate_frame_2d * local_target_dcm;
@@ -215,8 +228,7 @@ bool SStandOneLegAction::cycleHook(const ros::Time &time)
       desired_heigh_vel = 0.;
       if (actual_left_foot_pose.translation().z() > actual_right_foot_pose.translation().z())
       {
-        desired_height =
-            actual_right_foot_pose.translation().z() + bc_->getParameters()->z_height_;
+        desired_height = actual_right_foot_pose.translation().z() + bc_->getParameters()->z_height_;
       }
       else
       {
@@ -232,14 +244,13 @@ bool SStandOneLegAction::cycleHook(const ros::Time &time)
       }
       else
       {
-        desired_height =
-            actual_right_foot_pose.translation().z() + bc_->getParameters()->z_height_;
+        desired_height = actual_right_foot_pose.translation().z() + bc_->getParameters()->z_height_;
       }
     }
 
     eVector3 targetCOM;
-    targetCOM << global_target_dcm.x(), global_target_dcm.y(), desired_height;
     eVector3 targetCOM_vel;
+    targetCOM << global_target_dcm.x(), global_target_dcm.y(), desired_height;
     targetCOM_vel << global_target_dcm_vel.x(), global_target_dcm_vel.y(), desired_heigh_vel;
 
     control(bc_, rate_limiter_, targetCOM, targetCOM_vel, global_target_cop,

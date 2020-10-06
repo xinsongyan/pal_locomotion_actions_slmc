@@ -3,14 +3,22 @@ import rospy
 import numpy as np
 
 
-filename = os.getcwd() + '/com_trajectory.csv'
-com_trajectory = np.genfromtxt(filename, delimiter=',')
+def publish_trajectory(filename, param_name):
+    filename = os.getcwd() + '/' + filename
+    trajectory = np.genfromtxt(filename, delimiter=',')
+    trajectory_dict={'t':trajectory[:,0].tolist(),
+                     'pos':{'x':trajectory[:,1].tolist(),
+                            'y':trajectory[:,2].tolist(),
+                            'z':trajectory[:,3].tolist()},
+                     'vel':{'x':trajectory[:,4].tolist(),
+                            'y':trajectory[:,5].tolist(),
+                            'z':trajectory[:,6].tolist()},
+                     'acc':{'x':trajectory[:,7].tolist(),
+                            'y':trajectory[:,8].tolist(),
+                            'z':trajectory[:,9].tolist()}}
+    rospy.set_param('/'+param_name, trajectory_dict)
 
-
-com_trajectory_dict={'t':com_trajectory[:,0].tolist(),
-                     'pos':{'x':com_trajectory[:,1].tolist(), 'y':com_trajectory[:,2].tolist(), 'z':com_trajectory[:,3].tolist()},
-                     'vel':{'x':com_trajectory[:,4].tolist(), 'y':com_trajectory[:,5].tolist(), 'z':com_trajectory[:,6].tolist()},
-                     'acc':{'x':com_trajectory[:,7].tolist(), 'y':com_trajectory[:,8].tolist(), 'z':com_trajectory[:,9].tolist()}}
-rospy.set_param('/com_trajectory', com_trajectory_dict)
-
-
+if __name__ == "__main__":
+    publish_trajectory(filename='com_trajectory.csv', param_name='com_trajectory')
+    publish_trajectory(filename='lfoot_trajectory.csv', param_name='lfoot_trajectory')
+    publish_trajectory(filename='rfoot_trajectory.csv', param_name='rfoot_trajectory')
