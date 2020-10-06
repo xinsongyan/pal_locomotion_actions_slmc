@@ -8,10 +8,8 @@ using namespace pal_robot_tools;
 
 #include <ros/ros.h>
 
-//ros::init("param_loader");
 
 
-rapidcsv::Document csv_com_reader_("/home/xin/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/com_trajectory.csv");
 namespace pal_locomotion
 {
 CSVCOMAction::CSVCOMAction()
@@ -34,8 +32,8 @@ bool CSVCOMAction::configure(ros::NodeHandle &nh, BController *bController,
       "dcm_rate_limiter", nh, bc_->getControllerDt(), parameters_.hpl_paramters_));
 
 
-  pb.getPropertyValue<std::string>("filename", parameters_.filename_,
-                              property_bag::RetrievalHandling::THROW);
+//  pb.getPropertyValue<std::string>("filename", parameters_.filename_,
+//                              property_bag::RetrievalHandling::THROW);
 
 
   getComTrajectory(nh);
@@ -125,9 +123,10 @@ bool CSVCOMAction::enterHook(const ros::Time &time)
 {
   support_type_ = bc_->getActualSupportType();
 
-  int csv_size = csv_com_reader_.GetRowCount();
+//  int csv_size = csv_com_reader_.GetRowCount();
   internal_time_ = time;
-  control_time_ = internal_time_ + ros::Duration(csv_com_reader_.GetRow<float>(csv_size-1)[0]);
+
+  control_time_ = internal_time_ + ros::Duration(com_t_[com_t_.size()-1]);
   actual_com_= bc_->getActualCOMPosition();
   cnt_ = 0;
 
@@ -161,41 +160,6 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
   eVector3 targetCOM, targetCOM_vel;
   targetCOM = actual_com_;
   targetCOM_vel.setZero();
-
-//  if (cnt_ < csv_com_reader_.GetRowCount()){
-//    for (int i=1 ; i<4; i++) {
-//          targetCOM(i-1) = actual_com_(i-1)+ csv_com_reader_.GetRow<float>(cnt_)[i] - csv_com_reader_.GetRow<float>(0)[i];
-//          targetCOM_vel(i-1) =  csv_com_reader_.GetRow<float>(cnt_)[i+3];
-//    }
-//    cnt_ += 1;
-//  }
-//  else
-//  {
-//    for (int i=1 ; i<4; i++) {
-//     targetCOM(i-1) = actual_com_(i-1) + csv_com_reader_.GetRow<float>(csv_com_reader_.GetRowCount()-1)[i] - csv_com_reader_.GetRow<float>(0)[i];
-//     targetCOM_vel(i-1) =  csv_com_reader_.GetRow<float>(csv_com_reader_.GetRowCount()-1)[i+3];
-//    }
-//  }
-
-
-//    if (cnt_ < csv_com_reader_.GetRowCount()){
-//        targetCOM(0) = actual_com_[0] + com_trajectory_pos_x_[cnt_] - com_trajectory_pos_x_[0];
-//        targetCOM(1) = actual_com_[1] + com_trajectory_pos_y_[cnt_] - com_trajectory_pos_y_[0];
-//        targetCOM(2) = actual_com_[2] + com_trajectory_pos_z_[cnt_] - com_trajectory_pos_z_[0];
-//        targetCOM_vel(0) = com_trajectory_vel_x_[cnt_];
-//        targetCOM_vel(1) = com_trajectory_vel_y_[cnt_];
-//        targetCOM_vel(2) = com_trajectory_vel_z_[cnt_];
-//        cnt_ += 1;
-//    }
-//    else
-//    {
-//        targetCOM(0) = actual_com_[0] + com_trajectory_pos_x_[cnt_] - com_trajectory_pos_x_[0];
-//        targetCOM(1) = actual_com_[1] + com_trajectory_pos_y_[cnt_] - com_trajectory_pos_y_[0];
-//        targetCOM(2) = actual_com_[2] + com_trajectory_pos_z_[cnt_] - com_trajectory_pos_z_[0];
-//        targetCOM_vel(0) = com_trajectory_vel_x_[cnt_];
-//        targetCOM_vel(1) = com_trajectory_vel_y_[cnt_];
-//        targetCOM_vel(2) = com_trajectory_vel_z_[cnt_];
-//    }
 
 
     if (cnt_ < com_pos_.cols()-1){

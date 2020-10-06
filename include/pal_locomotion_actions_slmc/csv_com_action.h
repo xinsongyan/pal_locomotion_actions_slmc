@@ -86,9 +86,6 @@ private:
     std::vector<double> com_trajectory_vel_z_;
 
     Eigen::VectorXd com_t_;
-    Eigen::VectorXd com_pos_x_;
-    Eigen::VectorXd com_pos_y_;
-    Eigen::VectorXd com_pos_z_;
     Eigen::MatrixXd com_pos_;
     Eigen::MatrixXd com_vel_;
 
