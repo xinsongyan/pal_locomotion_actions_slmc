@@ -11,7 +11,7 @@ $ roslaunch talos_pal_locomotion talos_dcm_walking_controller.launch estimator:=
 
 run this python script to publish csv trajectory to ros param server
 ```
-$ python .../path_to_trajectory_folder/.../trajectory_publisher.py
+$ python ~/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/trajectory_publisher.py
 ```
 
 
