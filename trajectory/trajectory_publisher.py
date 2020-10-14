@@ -4,8 +4,9 @@ import numpy as np
 
 
 def publish_trajectory(filename, param_name):
-    filename = os.getcwd() + '/' + filename
-    trajectory = np.genfromtxt(filename, delimiter=',')
+    filename_ = os.getcwd() + '/src/pal_locomotion_actions_slmc/trajectory/' + filename
+    filename_ = '/home/user/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/'  + filename
+    trajectory = np.genfromtxt(filename_, delimiter=',')
     trajectory_dict={'t':trajectory[:,0].tolist(),
                      'pos':{'x':trajectory[:,1].tolist(),
                             'y':trajectory[:,2].tolist(),

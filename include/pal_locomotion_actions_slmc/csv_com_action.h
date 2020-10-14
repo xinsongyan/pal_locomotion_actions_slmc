@@ -25,12 +25,6 @@ struct CSVCOMActionParameters
     hpl_paramters_.rate_limiter_params_->max_rate_ = 0.5;
   }
   
-#define ARILES_SECTION_ID "CSVCOMActionParameters"
-#define ARILES_ENTRIES                                                                   \
-  ARILES_ENTRY_(use_rate_limited_dcm)                                                    \
-  ARILES_ENTRY_(filename)                                                             \                                             \
-#include ARILES_INITIALIZE
-
   bool use_rate_limited_dcm_;
   std::string filename_;
 

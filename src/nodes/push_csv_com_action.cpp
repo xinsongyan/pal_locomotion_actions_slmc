@@ -17,25 +17,7 @@ using namespace pal_locomotion;
 
 int main(int argc, char **argv)
 { 
-  // Set up args.
-  std::string filename;
-
-  Switch help_option("h", "help", "produce help message");
-
-  Value<std::string> filename_option("f", "file", "file name option", "a.csv", &filename);
-
-//  OptionParser op("Allowed options");
-//  op.add(help_option);
-//  op.add(filename_option);
-
-//  op.parse(argc, argv);
-//
-//  if (help_option.isSet() || !filename_option.isSet())
-//  {
-//    std::cout << op << "\n";
-//    return 0;
-//  }
-
+  
   // Set up ROS.
   ros::init(argc, argv, "move_com_action_start");
   ros::NodeHandle nh;
@@ -48,7 +30,6 @@ int main(int argc, char **argv)
   pal_locomotion_msgs::ActionWithParameters new_action;
   new_action.action_type = "pal_locomotion::CSVCOMAction";
   property_bag::PropertyBag parameters;
-//  parameters.addProperty("filename", filename);
 
   std::stringstream ss;
   boost::archive::text_oarchive oa(ss);

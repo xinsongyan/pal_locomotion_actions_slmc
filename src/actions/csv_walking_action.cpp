@@ -1,4 +1,4 @@
-#include <pal_locomotion_actions_slmc/csv_com_action.h>
+#include <pal_locomotion_actions_slmc/csv_walking_action.h>
 #include <pal_locomotion_actions_slmc/icp_control_utils.h>
 #include <math_utils/geometry_tools.h>
 
@@ -12,17 +12,17 @@ using namespace pal_robot_tools;
 
 namespace pal_locomotion
 {
-CSVCOMAction::CSVCOMAction()
+CSVWALKINGAction::CSVWALKINGAction()
   : internal_time_(ros::Time(0)), configure_interpolator_(true), initial_interpolation_(true)
 {
 
 }
 
-CSVCOMAction::~CSVCOMAction()
+CSVWALKINGAction::~CSVWALKINGAction()
 {
 }
 
-bool CSVCOMAction::configure(ros::NodeHandle &nh, BController *bController,
+bool CSVWALKINGAction::configure(ros::NodeHandle &nh, BController *bController,
                                 const property_bag::PropertyBag &pb)
 {
   bc_ = bController;
@@ -42,7 +42,7 @@ bool CSVCOMAction::configure(ros::NodeHandle &nh, BController *bController,
   return true;
 }
 
-bool CSVCOMAction::getComTrajectory(ros::NodeHandle &nh){
+bool CSVWALKINGAction::getComTrajectory(ros::NodeHandle &nh){
 
     std::string key = "/com_trajectory/t";
     if (nh.getParam(key, com_trajectory_t_)){
@@ -111,13 +111,13 @@ bool CSVCOMAction::getComTrajectory(ros::NodeHandle &nh){
     ROS_INFO_STREAM("eigen com_vel generated.");
 }
 
-Eigen::VectorXd CSVCOMAction::std2eigen(std::vector<double> std_vec){
+Eigen::VectorXd CSVWALKINGAction::std2eigen(std::vector<double> std_vec){
     Eigen::VectorXd eigen_vec = Eigen::Map<Eigen::VectorXd>(std_vec.data(), std_vec.size());
     return eigen_vec;
 }
 
 
-bool CSVCOMAction::enterHook(const ros::Time &time)
+bool CSVWALKINGAction::enterHook(const ros::Time &time)
 {
   support_type_ = bc_->getActualSupportType();
 
@@ -131,7 +131,7 @@ bool CSVCOMAction::enterHook(const ros::Time &time)
   return true;
 }
 
-bool CSVCOMAction::cycleHook(const ros::Time &time)
+bool CSVWALKINGAction::cycleHook(const ros::Time &time)
 {
  
   eMatrixHom actual_left_foot_pose = bc_->getActualFootPose(+Side::LEFT);
@@ -194,7 +194,7 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
   return true;
 }
 
-bool CSVCOMAction::isOverHook(const ros::Time &time)
+bool CSVWALKINGAction::isOverHook(const ros::Time &time)
 {
   if (bc_->getStateMachine()->queue_size() > 1)
   {
@@ -203,7 +203,7 @@ bool CSVCOMAction::isOverHook(const ros::Time &time)
   return false;
 }
 
-bool CSVCOMAction::endHook(const ros::Time &time)
+bool CSVWALKINGAction::endHook(const ros::Time &time)
 {
   return true;
 }
