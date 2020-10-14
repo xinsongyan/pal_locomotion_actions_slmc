@@ -174,7 +174,7 @@ bool CSVCOMAction::cycleHook(const ros::Time &time)
   if (fabs((internal_time_ - control_time_).toSec()) < 1e-3){
     ROS_INFO_STREAM("Done");
   }
-
+ 
   eVector2 global_target_cop = targetCOM.head(2);
 
   control(bc_,

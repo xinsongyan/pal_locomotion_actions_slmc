@@ -46,8 +46,11 @@ struct ContactSequenceFromCSV {
     ~ContactSequenceFromCSV(){};
 
     public:
-      Eigen::VectorXd time;
-      Eigen::VectorXd type;
+      Eigen::VectorXd end_time;
+      Eigen::MatrixXd oMi_R;
+      Eigen::MatrixXd oMi_L;
+      Eigen::MatrixXd oMf;
+      Eigen::VectorXi type;
 };
 
 class CSVWALKINGAction : public WalkingActionBase
@@ -82,6 +85,10 @@ private:
 
   ros::Time internal_time_;
   ros::Time control_time_;
+  ros::Time ds_time_;
+  ros::Time ss_time_;
+  ros::Time sss_time_;
+
   int cnt_;
 
 
@@ -93,6 +100,7 @@ private:
 
   // trajectory container
   std::vector<double> trajectory_t_;
+  std::vector<int> contact_type_;
   std::vector<double> trajectory_pos_x_;
   std::vector<double> trajectory_pos_y_;
   std::vector<double> trajectory_pos_z_;
@@ -104,6 +112,9 @@ private:
   TrajectoryFromCSV lfoot_traj_;
   TrajectoryFromCSV rfoot_traj_;
   ContactSequenceFromCSV cs_;
+
+  int current_cs_;
+  bool cs_change_;
 };
 }
 

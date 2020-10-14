@@ -1,0 +1,9 @@
+com_traj.csv
+[t, x, y, z, xd, yd, zd]
+
+contact_state_trajectory.csv
+[end_time, rfoot_pos, lfoot_pos, goal_pos, contact_state]
+
+Note:
+Contact state is defined as
+Initial dsp -> ssp -> final dsp -> Initial dsp -> ssp -> ...

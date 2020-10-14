@@ -32,10 +32,9 @@ bool CSVWALKINGAction::configure(ros::NodeHandle &nh, BController *bController,
       "dcm_rate_limiter", nh, bc_->getControllerDt(), parameters_.hpl_paramters_));
 
   getCSVTrajectory(nh, "com", com_traj_);
+  getCSVTrajectory(nh, "lfoot", lfoot_traj_);
+  getCSVTrajectory(nh, "rfoot", rfoot_traj_);
   getCSVContactSequence(nh, cs_);
-
-  current_cs_ = 0;
-  cs_change_ = true;
   return true;
 }
 
@@ -99,94 +98,23 @@ bool CSVWALKINGAction::getCSVTrajectory(const ros::NodeHandle &nh, const std::st
 }
 
 bool CSVWALKINGAction::getCSVContactSequence(const ros::NodeHandle &nh, ContactSequenceFromCSV & cs){
-  std::string key = "/contact_sequence/t_end";
+  std::string key = "/contact_sequence/t";
   if (nh.getParam(key, trajectory_t_)){
       ROS_INFO_STREAM("Successfully load " + key);
   }else{
       ROS_INFO_STREAM("Fail to load " + key);
   }
-  cs.end_time = Eigen::Map<Eigen::VectorXd>(trajectory_t_.data(), trajectory_t_.size());
+  cs.time = Eigen::Map<Eigen::VectorXd>(trajectory_t_.data(), trajectory_t_.size());
 
-  key = "/contact_sequence/oMi_R/x";
-  if (nh.getParam(key, trajectory_pos_x_)){
+  key = "/contact_sequence/cs";
+  if (nh.getParam(key, trajectory_t_)){
       ROS_INFO_STREAM("Successfully load " + key);
   }else{
       ROS_INFO_STREAM("Fail to load " + key);
   }
-
-  key = "/contact_sequence/oMi_R/y";
-  if (nh.getParam(key, trajectory_pos_y_)){
-      ROS_INFO_STREAM("Successfully load " + key);
-  }else{
-      ROS_INFO_STREAM("Fail to load " + key);
-  }
-
-  key = "/contact_sequence/oMi_R/z";
-  if (nh.getParam(key, trajectory_pos_z_)){
-      ROS_INFO_STREAM("Successfully load " + key);
-  }else{
-      ROS_INFO_STREAM("Fail to load " + key);
-  }
-
-  cs.oMi_R.resize(3, std2eigen(trajectory_pos_x_).size());
-  cs.oMi_R << std2eigen(trajectory_pos_x_).transpose(), std2eigen(trajectory_pos_y_).transpose(), std2eigen(trajectory_pos_z_).transpose();
-
-  key = "/contact_sequence/oMi_L/x";
-  if (nh.getParam(key, trajectory_pos_x_)){
-      ROS_INFO_STREAM("Successfully load " + key);
-  }else{
-      ROS_INFO_STREAM("Fail to load " + key);
-  }
-
-  key = "/contact_sequence/oMi_L/y";
-  if (nh.getParam(key, trajectory_pos_y_)){
-      ROS_INFO_STREAM("Successfully load " + key);
-  }else{
-      ROS_INFO_STREAM("Fail to load " + key);
-  }
-
-  key = "/contact_sequence/oMi_L/z";
-  if (nh.getParam(key, trajectory_pos_z_)){
-      ROS_INFO_STREAM("Successfully load " + key);
-  }else{
-      ROS_INFO_STREAM("Fail to load " + key);
-  }
-
-  cs.oMi_L.resize(3, std2eigen(trajectory_pos_x_).size());
-  cs.oMi_L << std2eigen(trajectory_pos_x_).transpose(), std2eigen(trajectory_pos_y_).transpose(), std2eigen(trajectory_pos_z_).transpose();
-
-  key = "/contact_sequence/oMf/x";
-  if (nh.getParam(key, trajectory_pos_x_)){
-      ROS_INFO_STREAM("Successfully load " + key);
-  }else{
-      ROS_INFO_STREAM("Fail to load " + key);
-  }
-
-  key = "/contact_sequence/oMf/y";
-  if (nh.getParam(key, trajectory_pos_y_)){
-      ROS_INFO_STREAM("Successfully load " + key);
-  }else{
-      ROS_INFO_STREAM("Fail to load " + key);
-  }
-
-  key = "/contact_sequence/oMf/z";
-  if (nh.getParam(key, trajectory_pos_z_)){
-      ROS_INFO_STREAM("Successfully load " + key);
-  }else{
-      ROS_INFO_STREAM("Fail to load " + key);
-  }
-
-  cs.oMf.resize(3, std2eigen(trajectory_pos_x_).size());
-  cs.oMf << std2eigen(trajectory_pos_x_).transpose(), std2eigen(trajectory_pos_y_).transpose(), std2eigen(trajectory_pos_z_).transpose();
-
-  key = "/contact_sequence/type";
-  if (nh.getParam(key, contact_type_)){
-      ROS_INFO_STREAM("Successfully load " + key);
-  }else{
-      ROS_INFO_STREAM("Fail to load " + key);
-  }
-  cs.type = Eigen::Map<Eigen::VectorXi>(contact_type_.data(), contact_type_.size());
+  cs.type = Eigen::Map<Eigen::VectorXd>(trajectory_t_.data(), trajectory_t_.size());
   ROS_INFO_STREAM( "Contact sequence is generated.");
+
 }
 bool CSVWALKINGAction::enterHook(const ros::Time &time)
 {
@@ -214,7 +142,7 @@ bool CSVWALKINGAction::enterHook(const ros::Time &time)
   sss_time_ = internal_time_ + ros::Duration(3.0);
 
   actual_com_= bc_->getActualCOMPosition();
- 
+  std::cout<< actual_com_ << std::endl;
   eMatrixHom actual_left_foot_pose = bc_->getActualFootPose(+Side::LEFT);
   eMatrixHom actual_right_foot_pose = bc_->getActualFootPose(+Side::RIGHT);
 
@@ -242,122 +170,53 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
   eVector3 targetCOM, targetCOM_vel;
   targetCOM = actual_com_;
   targetCOM_vel.setZero();
-  
-  ros::Duration cs_duration = time - internal_time_;
-  double cs_time = cs_duration.toSec() + cs_duration.toNSec() * 1e-9;
-  if (cnt_ < com_traj_.pos.cols()-1){
-    if (cs_.type(current_cs_) == 0){
-      if (current_cs_ == 0){
-        bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
-
-        if (cs_.type(current_cs_+1) == -1)
-          bc_->setWeightDistribution(0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_))   );
-        else
-          bc_->setWeightDistribution(1.0 - 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_))   );
-      }
-      else{
-        if (cs_.type(current_cs_+1) == -1)
-         bc_->setWeightDistribution(0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )   );
-        else
-         bc_->setWeightDistribution(1.0 - 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )   );
-      }
-    } 
-    else if (cs_.type(current_cs_) == 1){
-      bc_->setStanceLegIDs({Side::LEFT});
-      bc_->setSwingLegIDs({Side::RIGHT});
-      bc_->setWeightDistribution(1.);
-    }
-    else if (cs_.type(current_cs_) == -1){
-      bc_->setStanceLegIDs({Side::RIGHT});
-      bc_->setSwingLegIDs({Side::LEFT});
-      bc_->setWeightDistribution(0.);
-    }
-    else{
-      bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
-
-      if (cs_.type(current_cs_-1) == -1)
-       bc_->setWeightDistribution(0.5 - 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )  );
-      else
-       bc_->setWeightDistribution(0.5 + 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )  );
-    }
-
-
-
-
-
-    targetCOM =  actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+ 
+  if (time < ds_time_)
+  {
+    targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
     targetCOM_vel = com_traj_.vel.col(cnt_);
+
+    bc_->setWeightDistribution(0.5 + 0.5 * (cnt_) / 500.0); // Left Side?
+    cnt_ += 1;
+  }
+  else if (time < ss_time_) {
+    
+    bc_->setStanceLegIDs({Side::LEFT});
+    bc_->setSwingLegIDs({Side::RIGHT});
+    targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+    targetCOM_vel = com_traj_.vel.col(cnt_);
+
+    bc_->setWeightDistribution(1.0); // Left Side?
+    cnt_ += 1;
+  }
+  else if (time < sss_time_) {
+    ROS_INFO_STREAM("HERE");
+    bc_->setStanceLegIDs({Side::RIGHT});
+    bc_->setSwingLegIDs({Side::LEFT});
+
+    targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+    targetCOM_vel = com_traj_.vel.col(cnt_);
+
+    bc_->setWeightDistribution(0.0); // Left Side?
+    cnt_ += 1;
+  }
+  else if (cnt_ < com_traj_.pos.cols()-1){
+
+    bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
+
+    targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+    targetCOM_vel = com_traj_.vel.col(cnt_);
+
+    bc_->setWeightDistribution(0.5); // Left Side?
     cnt_ += 1;
   }
   else{
     targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+    targetCOM_vel = com_traj_.vel.col(cnt_);
     targetCOM_vel.setZero();
+    bc_->setWeightDistribution(0.5); // Left Side?
   }
-
-
-  // if (time < ros::Duration(ds_time_)
-  // {
-  //   targetCOM = com_traj_.pos.col(cnt_);
-  //   targetCOM_vel = com_traj_.vel.col(cnt_);
-
-  //   bc_->setWeightDistribution(0.5 - 0.5 * (cnt_) / 500.0); // Left Side?
-  //   cnt_ += 1;
-  // }
-  // else if (time < ss_time_) {
-    
-  //   bc_->setStanceLegIDs({Side::LEFT});
-  //   bc_->setSwingLegIDs({Side::RIGHT});
-  //   targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-  //   targetCOM_vel = com_traj_.vel.col(cnt_);
-
-  //   bc_->setWeightDistribution(1.0); // Left Side?
-  //   cnt_ += 1;
-  // }
-  // else if (time < sss_time_) {
-  //   ROS_INFO_STREAM("HERE");
-  //   bc_->setStanceLegIDs({Side::RIGHT});
-  //   bc_->setSwingLegIDs({Side::LEFT});
-
-  //   targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-  //   targetCOM_vel = com_traj_.vel.col(cnt_);
-
-  //   bc_->setWeightDistribution(0.0); // Left Side?
-  //   cnt_ += 1;
-  // }
-  // else if (cnt_ < com_traj_.pos.cols()-1){
-
-  //   bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
-
-  //   targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-  //   targetCOM_vel = com_traj_.vel.col(cnt_);
-
-  //   bc_->setWeightDistribution(0.5); // Left Side?
-  //   cnt_ += 1;
-  // }
-  // else{
-  //   targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-  //   targetCOM_vel = com_traj_.vel.col(cnt_);
-  //   targetCOM_vel.setZero();
-  //   bc_->setWeightDistribution(0.5); // Left Side?
-  // }
-  // std::cout << targetCOM.transpose() << std::endl;
-
-
-    // if (cnt_ < com_traj_.pos.cols()-1){
-    //     targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-    //     targetCOM_vel = com_traj_.vel.col(cnt_);
-    //     cnt_ += 1;
-    // }
-    // else
-    // {
-    //     targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-    //     targetCOM_vel.setZero();
-    // }
-
-
-
-
-
+  std::cout << cnt_ << std::endl;
   if (fabs((internal_time_ - control_time_).toSec()) < 1e-3){
     ROS_INFO_STREAM("Done");
   }
