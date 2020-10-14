@@ -19,7 +19,17 @@ def publish_trajectory(filename, param_name):
                             'z':trajectory[:,9].tolist()}}
     rospy.set_param('/'+param_name, trajectory_dict)
 
+
+def publish_contactsequence(filename, param_name):
+    filename_ = os.getcwd() + '/src/pal_locomotion_actions_slmc/trajectory/' + filename
+    filename_ = '/home/user/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/'  + filename
+    trajectory = np.genfromtxt(filename_, delimiter=',')
+    trajectory_dict={'t':trajectory[:,0].tolist(),
+                     'cs':trajectory[:,1].tolist()}
+    rospy.set_param('/'+param_name, trajectory_dict)
+
 if __name__ == "__main__":
     publish_trajectory(filename='com_trajectory.csv', param_name='com_trajectory')
     publish_trajectory(filename='lfoot_trajectory.csv', param_name='lfoot_trajectory')
     publish_trajectory(filename='rfoot_trajectory.csv', param_name='rfoot_trajectory')
+    publish_contactsequence(filename='contact_state_trajectory.csv', param_name='contact_sequence')

@@ -31,92 +31,91 @@ bool CSVWALKINGAction::configure(ros::NodeHandle &nh, BController *bController,
   rate_limiter_.reset(new HighPassRateLimiterVector2d(
       "dcm_rate_limiter", nh, bc_->getControllerDt(), parameters_.hpl_paramters_));
 
-
-//  pb.getPropertyValue<std::string>("filename", parameters_.filename_,
-//                              property_bag::RetrievalHandling::THROW);
-
-
-  getComTrajectory(nh);
-
-
+  getCSVTrajectory(nh, "com", com_traj_);
+  getCSVTrajectory(nh, "lfoot", lfoot_traj_);
+  getCSVTrajectory(nh, "rfoot", rfoot_traj_);
+  getCSVContactSequence(nh, cs_);
   return true;
 }
 
-bool CSVWALKINGAction::getComTrajectory(ros::NodeHandle &nh){
-
-    std::string key = "/com_trajectory/t";
-    if (nh.getParam(key, com_trajectory_t_)){
+bool CSVWALKINGAction::getCSVTrajectory(const ros::NodeHandle &nh, const std::string & name, TrajectoryFromCSV & traj){
+    std::string key = "/" + name + "_trajectory/t";
+    if (nh.getParam(key, trajectory_t_)){
         ROS_INFO_STREAM("Successfully load " + key);
     }else{
         ROS_INFO_STREAM("Fail to load " + key);
     }
-    com_t_ = Eigen::Map<Eigen::VectorXd>(com_trajectory_t_.data(), com_trajectory_t_.size());
+    traj.time = Eigen::Map<Eigen::VectorXd>(trajectory_t_.data(), trajectory_t_.size());
 
-    key = "/com_trajectory/pos/x";
-    if (nh.getParam(key, com_trajectory_pos_x_)){
-        ROS_INFO_STREAM("Successfully load " + key);
-    }else{
-        ROS_INFO_STREAM("Fail to load " + key);
-    }
-
-    key = "/com_trajectory/pos/y";
-    if (nh.getParam(key, com_trajectory_pos_y_)){
+    key = "/" + name + "_trajectory/pos/x";
+    if (nh.getParam(key, trajectory_pos_x_)){
         ROS_INFO_STREAM("Successfully load " + key);
     }else{
         ROS_INFO_STREAM("Fail to load " + key);
     }
 
-    key = "/com_trajectory/pos/z";
-    if (nh.getParam(key, com_trajectory_pos_z_)){
+    key = "/" + name + "_trajectory/pos/y";
+    if (nh.getParam(key, trajectory_pos_y_)){
         ROS_INFO_STREAM("Successfully load " + key);
     }else{
         ROS_INFO_STREAM("Fail to load " + key);
     }
 
-    key = "/com_trajectory/vel/x";
-    if (nh.getParam(key, com_trajectory_vel_x_)){
+    key = "/" + name + "_trajectory/pos/z";
+    if (nh.getParam(key, trajectory_pos_z_)){
         ROS_INFO_STREAM("Successfully load " + key);
     }else{
         ROS_INFO_STREAM("Fail to load " + key);
     }
 
-    key = "/com_trajectory/vel/y";
-    if (nh.getParam(key, com_trajectory_vel_y_)){
+    key = "/" + name + "_trajectory/vel/x";
+    if (nh.getParam(key, trajectory_vel_x_)){
         ROS_INFO_STREAM("Successfully load " + key);
     }else{
         ROS_INFO_STREAM("Fail to load " + key);
     }
 
-    key = "/com_trajectory/vel/z";
-    if (nh.getParam(key, com_trajectory_vel_z_)){
+    key = "/" + name + "_trajectory/vel/y";
+    if (nh.getParam(key, trajectory_vel_y_)){
         ROS_INFO_STREAM("Successfully load " + key);
     }else{
         ROS_INFO_STREAM("Fail to load " + key);
     }
 
-    Eigen::VectorXd com_pos_x_ = std2eigen(com_trajectory_pos_x_);
-    Eigen::VectorXd com_pos_y_ = std2eigen(com_trajectory_pos_y_);
-    Eigen::VectorXd com_pos_z_ = std2eigen(com_trajectory_pos_z_);
+    key = "/" + name + "_trajectory/vel/z";
+    if (nh.getParam(key, trajectory_vel_z_)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
 
-    com_pos_.resize(3, com_pos_x_.size());
-    com_pos_ << com_pos_x_.transpose(), com_pos_y_.transpose(), com_pos_z_.transpose();
-    ROS_INFO_STREAM("eigen com_pos generated.");
+    traj.pos.resize(3, std2eigen(trajectory_pos_x_).size());
+    traj.vel.resize(3, traj.pos.cols());
 
-    Eigen::VectorXd com_vel_x_ = std2eigen(com_trajectory_vel_x_);
-    Eigen::VectorXd com_vel_y_ = std2eigen(com_trajectory_vel_y_);
-    Eigen::VectorXd com_vel_z_ = std2eigen(com_trajectory_vel_z_);
-
-    com_vel_.resize(3, com_vel_x_.size());
-    com_vel_ << com_vel_x_.transpose(), com_vel_y_.transpose(), com_vel_z_.transpose();
-    ROS_INFO_STREAM("eigen com_vel generated.");
+    traj.pos << std2eigen(trajectory_pos_x_).transpose(), std2eigen(trajectory_pos_y_).transpose(), std2eigen(trajectory_pos_z_).transpose();
+    traj.vel << std2eigen(trajectory_vel_x_).transpose(), std2eigen(trajectory_vel_y_).transpose(), std2eigen(trajectory_vel_z_).transpose();
+    ROS_INFO_STREAM(name + "_trajectory is generated.");
 }
 
-Eigen::VectorXd CSVWALKINGAction::std2eigen(std::vector<double> std_vec){
-    Eigen::VectorXd eigen_vec = Eigen::Map<Eigen::VectorXd>(std_vec.data(), std_vec.size());
-    return eigen_vec;
+bool CSVWALKINGAction::getCSVContactSequence(const ros::NodeHandle &nh, ContactSequenceFromCSV & cs){
+  std::string key = "/contact_sequence/t";
+  if (nh.getParam(key, trajectory_t_)){
+      ROS_INFO_STREAM("Successfully load " + key);
+  }else{
+      ROS_INFO_STREAM("Fail to load " + key);
+  }
+  cs.time = Eigen::Map<Eigen::VectorXd>(trajectory_t_.data(), trajectory_t_.size());
+
+  key = "/contact_sequence/cs";
+  if (nh.getParam(key, trajectory_t_)){
+      ROS_INFO_STREAM("Successfully load " + key);
+  }else{
+      ROS_INFO_STREAM("Fail to load " + key);
+  }
+  cs.type = Eigen::Map<Eigen::VectorXd>(trajectory_t_.data(), trajectory_t_.size());
+  ROS_INFO_STREAM( "Contact sequence is generated.");
+
 }
-
-
 bool CSVWALKINGAction::enterHook(const ros::Time &time)
 {
   support_type_ = bc_->getActualSupportType();
@@ -124,7 +123,7 @@ bool CSVWALKINGAction::enterHook(const ros::Time &time)
 //  int csv_size = csv_com_reader_.GetRowCount();
   internal_time_ = time;
 
-  control_time_ = internal_time_ + ros::Duration(com_t_[com_t_.size()-1]);
+  control_time_ = internal_time_ + ros::Duration(com_traj_.time[com_traj_.time.size()-1]);
   actual_com_= bc_->getActualCOMPosition();
   cnt_ = 0;
 
@@ -133,7 +132,6 @@ bool CSVWALKINGAction::enterHook(const ros::Time &time)
 
 bool CSVWALKINGAction::cycleHook(const ros::Time &time)
 {
- 
   eMatrixHom actual_left_foot_pose = bc_->getActualFootPose(+Side::LEFT);
   eMatrixHom actual_right_foot_pose = bc_->getActualFootPose(+Side::RIGHT);
 
@@ -159,15 +157,15 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
   targetCOM_vel.setZero();
 
 
-    if (cnt_ < com_pos_.cols()-1){
-        targetCOM = actual_com_ + com_pos_.col(cnt_) - com_pos_.col(0);
-        targetCOM_vel = com_vel_.col(cnt_);
+    if (cnt_ < com_traj_.pos.cols()-1){
+        targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+        targetCOM_vel = com_traj_.vel.col(cnt_);
         cnt_ += 1;
     }
     else
     {
-        targetCOM = actual_com_ + com_pos_.col(cnt_) - com_pos_.col(0);
-        targetCOM_vel = com_vel_.col(cnt_);
+        targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+        targetCOM_vel = com_traj_.vel.col(cnt_);
     }
 
 
@@ -206,5 +204,10 @@ bool CSVWALKINGAction::isOverHook(const ros::Time &time)
 bool CSVWALKINGAction::endHook(const ros::Time &time)
 {
   return true;
+}
+
+Eigen::VectorXd CSVWALKINGAction::std2eigen(std::vector<double> std_vec){
+    Eigen::VectorXd eigen_vec = Eigen::Map<Eigen::VectorXd>(std_vec.data(), std_vec.size());
+    return eigen_vec;
 }
 }

@@ -31,6 +31,25 @@ struct CSVWALKINGActionParameters
   math_utils::HighPassRateLimiterParameters hpl_paramters_;
 };
 
+struct TrajectoryFromCSV {
+    TrajectoryFromCSV(){};
+    ~TrajectoryFromCSV(){};
+
+    public:
+      Eigen::VectorXd time;
+      Eigen::MatrixXd pos;
+      Eigen::MatrixXd vel;
+};
+
+struct ContactSequenceFromCSV {
+    ContactSequenceFromCSV(){};
+    ~ContactSequenceFromCSV(){};
+
+    public:
+      Eigen::VectorXd time;
+      Eigen::VectorXd type;
+};
+
 class CSVWALKINGAction : public WalkingActionBase
 {
 public:
@@ -49,7 +68,9 @@ public:
 
   bool endHook(const ros::Time &time) override;
 
-  bool getComTrajectory(ros::NodeHandle &nh);
+  bool getCSVTrajectory(const ros::NodeHandle &nh, const std::string & name, TrajectoryFromCSV & traj);
+  bool getCSVContactSequence(const ros::NodeHandle &nh, ContactSequenceFromCSV & cs);
+
   Eigen::VectorXd std2eigen(const std::vector<double> std_vec);
 
 private:
@@ -70,19 +91,19 @@ private:
   eVector2 targetCOP_rate_limited_unclamped_;
   eVector2 targetCOP_unclamped_;
 
-    // com trajectory container
-    std::vector<double> com_trajectory_t_;
-    std::vector<double> com_trajectory_pos_x_;
-    std::vector<double> com_trajectory_pos_y_;
-    std::vector<double> com_trajectory_pos_z_;
-    std::vector<double> com_trajectory_vel_x_;
-    std::vector<double> com_trajectory_vel_y_;
-    std::vector<double> com_trajectory_vel_z_;
+  // trajectory container
+  std::vector<double> trajectory_t_;
+  std::vector<double> trajectory_pos_x_;
+  std::vector<double> trajectory_pos_y_;
+  std::vector<double> trajectory_pos_z_;
+  std::vector<double> trajectory_vel_x_;
+  std::vector<double> trajectory_vel_y_;
+  std::vector<double> trajectory_vel_z_;
 
-    Eigen::VectorXd com_t_;
-    Eigen::MatrixXd com_pos_;
-    Eigen::MatrixXd com_vel_;
-
+  TrajectoryFromCSV com_traj_;
+  TrajectoryFromCSV lfoot_traj_;
+  TrajectoryFromCSV rfoot_traj_;
+  ContactSequenceFromCSV cs_;
 };
 }
 
