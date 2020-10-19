@@ -6,6 +6,7 @@ import numpy as np
 def publish_trajectory(filename, param_name):
     #filename_ = os.getcwd() + '/src/pal_locomotion_actions_slmc/trajectory/dsp_test' + filename
     filename_ = '/home/user/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/dsp_test/'  + filename
+    filename_ = os.getcwd() + '/' + filename
     trajectory = np.genfromtxt(filename_, delimiter=',')
     trajectory_dict={'t':trajectory[:,0].tolist(),
                      'pos':{'x':trajectory[:,1].tolist(),
@@ -20,6 +21,7 @@ def publish_trajectory(filename, param_name):
 def publish_contactsequence(filename, param_name):
 #     filename_ = os.getcwd() + '/src/pal_locomotion_actions_slmc/trajectory/' + filename
     filename_ = '/home/user/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/dsp_test/'  + filename
+    filename_ = os.getcwd() + '/' + filename
     trajectory = np.genfromtxt(filename_, delimiter=',')
     trajectory_dict={'t_end':trajectory[:,0].tolist(),
                      'oMi_R':{'x':trajectory[:,1].tolist(),

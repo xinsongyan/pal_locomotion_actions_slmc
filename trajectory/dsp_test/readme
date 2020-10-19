@@ -4,6 +4,15 @@ com_traj.csv
 contact_state_trajectory.csv
 [end_time, rfoot_pos, lfoot_pos, goal_pos, contact_state]
 
+
+
 Note:
 Contact state is defined as
-Initial dsp -> ssp -> final dsp -> Initial dsp -> ssp -> ...
+(Initial dsp -> ssp -> final dsp) -> (Initial dsp -> ssp -> final dsp)...
+(0 > 1(-1) > 2) ---> (0 > 1(-1) > 2)
+Ini dsp: 0
+Fin dsp: 2
+ssp:
+    lsp: +1
+    rsp: -1
+
