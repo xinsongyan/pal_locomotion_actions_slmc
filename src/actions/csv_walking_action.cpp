@@ -190,7 +190,6 @@ bool CSVWALKINGAction::getCSVContactSequence(const ros::NodeHandle &nh, ContactS
 }
 bool CSVWALKINGAction::enterHook(const ros::Time &time)
 {
-
   bc_->setHybridControlFactor("leg_left_1_joint", 1.);
   bc_->setHybridControlFactor("leg_left_2_joint", 1.);
   bc_->setHybridControlFactor("leg_left_3_joint", 1.);
@@ -282,9 +281,6 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
     }
 
 
-
-
-
     targetCOM =  actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
     targetCOM_vel = com_traj_.vel.col(cnt_);
     cnt_ += 1;
@@ -293,70 +289,6 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
     targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
     targetCOM_vel.setZero();
   }
-
-
-  // if (time < ros::Duration(ds_time_)
-  // {
-  //   targetCOM = com_traj_.pos.col(cnt_);
-  //   targetCOM_vel = com_traj_.vel.col(cnt_);
-
-  //   bc_->setWeightDistribution(0.5 - 0.5 * (cnt_) / 500.0); // Left Side?
-  //   cnt_ += 1;
-  // }
-  // else if (time < ss_time_) {
-    
-  //   bc_->setStanceLegIDs({Side::LEFT});
-  //   bc_->setSwingLegIDs({Side::RIGHT});
-  //   targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-  //   targetCOM_vel = com_traj_.vel.col(cnt_);
-
-  //   bc_->setWeightDistribution(1.0); // Left Side?
-  //   cnt_ += 1;
-  // }
-  // else if (time < sss_time_) {
-  //   ROS_INFO_STREAM("HERE");
-  //   bc_->setStanceLegIDs({Side::RIGHT});
-  //   bc_->setSwingLegIDs({Side::LEFT});
-
-  //   targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-  //   targetCOM_vel = com_traj_.vel.col(cnt_);
-
-  //   bc_->setWeightDistribution(0.0); // Left Side?
-  //   cnt_ += 1;
-  // }
-  // else if (cnt_ < com_traj_.pos.cols()-1){
-
-  //   bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
-
-  //   targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-  //   targetCOM_vel = com_traj_.vel.col(cnt_);
-
-  //   bc_->setWeightDistribution(0.5); // Left Side?
-  //   cnt_ += 1;
-  // }
-  // else{
-  //   targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-  //   targetCOM_vel = com_traj_.vel.col(cnt_);
-  //   targetCOM_vel.setZero();
-  //   bc_->setWeightDistribution(0.5); // Left Side?
-  // }
-  // std::cout << targetCOM.transpose() << std::endl;
-
-
-    // if (cnt_ < com_traj_.pos.cols()-1){
-    //     targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-    //     targetCOM_vel = com_traj_.vel.col(cnt_);
-    //     cnt_ += 1;
-    // }
-    // else
-    // {
-    //     targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-    //     targetCOM_vel.setZero();
-    // }
-
-
-
-
 
   if (fabs((internal_time_ - control_time_).toSec()) < 1e-3){
     ROS_INFO_STREAM("Done");

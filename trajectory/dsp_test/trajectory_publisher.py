@@ -37,5 +37,8 @@ def publish_contactsequence(filename, param_name):
     rospy.set_param('/'+param_name, trajectory_dict)
 
 if __name__ == "__main__":
-    publish_trajectory(filename='com_traj.csv', param_name='com_trajectory')
-    publish_contactsequence(filename='cs.csv', param_name='contact_sequence')
+    try:
+       while not rospy.is_shutdown():
+              publish_trajectory(filename='com_traj.csv', param_name='com_trajectory')
+              publish_contactsequence(filename='cs.csv', param_name='contact_sequence')
+    except rospy.ROSInterruptException: pass

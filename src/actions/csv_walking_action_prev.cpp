@@ -1,4 +1,4 @@
-#include <pal_locomotion_actions_slmc/csv_walking_action.h>
+#include <pal_locomotion_actions_slmc/csv_walking_action_prev.h>
 #include <pal_locomotion_actions_slmc/icp_control_utils.h>
 #include <math_utils/geometry_tools.h>
 
@@ -12,17 +12,17 @@ using namespace pal_robot_tools;
 
 namespace pal_locomotion
 {
-CSVWALKINGAction::CSVWALKINGAction()
+CSVWALKINGActionPrev::CSVWALKINGActionPrev()
   : internal_time_(ros::Time(0)), configure_interpolator_(true), initial_interpolation_(true)
 {
 
 }
 
-CSVWALKINGAction::~CSVWALKINGAction()
+CSVWALKINGActionPrev::~CSVWALKINGActionPrev()
 {
 }
 
-bool CSVWALKINGAction::configure(ros::NodeHandle &nh, BController *bController,
+bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bController,
                                 const property_bag::PropertyBag &pb)
 {
   bc_ = bController;
@@ -38,7 +38,7 @@ bool CSVWALKINGAction::configure(ros::NodeHandle &nh, BController *bController,
   return true;
 }
 
-bool CSVWALKINGAction::getCSVTrajectory(const ros::NodeHandle &nh, const std::string & name, TrajectoryFromCSV & traj){
+bool CSVWALKINGActionPrev::getCSVTrajectory(const ros::NodeHandle &nh, const std::string & name, TrajectoryFromCSV2 & traj){
     std::string key = "/" + name + "_trajectory/t";
     if (nh.getParam(key, trajectory_t_)){
         ROS_INFO_STREAM("Successfully load " + key);
@@ -97,7 +97,7 @@ bool CSVWALKINGAction::getCSVTrajectory(const ros::NodeHandle &nh, const std::st
     ROS_INFO_STREAM(name + "_trajectory is generated.");
 }
 
-bool CSVWALKINGAction::getCSVContactSequence(const ros::NodeHandle &nh, ContactSequenceFromCSV & cs){
+bool CSVWALKINGActionPrev::getCSVContactSequence(const ros::NodeHandle &nh, ContactSequenceFromCSV2 & cs){
   std::string key = "/contact_sequence/t";
   if (nh.getParam(key, trajectory_t_)){
       ROS_INFO_STREAM("Successfully load " + key);
@@ -116,7 +116,7 @@ bool CSVWALKINGAction::getCSVContactSequence(const ros::NodeHandle &nh, ContactS
   ROS_INFO_STREAM( "Contact sequence is generated.");
 
 }
-bool CSVWALKINGAction::enterHook(const ros::Time &time)
+bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
 {
 
   bc_->setHybridControlFactor("leg_left_1_joint", 1.);
@@ -142,7 +142,7 @@ bool CSVWALKINGAction::enterHook(const ros::Time &time)
   sss_time_ = internal_time_ + ros::Duration(3.0);
 
   actual_com_= bc_->getActualCOMPosition();
-  std::cout<< actual_com_ << std::endl;
+ 
   eMatrixHom actual_left_foot_pose = bc_->getActualFootPose(+Side::LEFT);
   eMatrixHom actual_right_foot_pose = bc_->getActualFootPose(+Side::RIGHT);
 
@@ -161,7 +161,7 @@ bool CSVWALKINGAction::enterHook(const ros::Time &time)
   return true;
 }
 
-bool CSVWALKINGAction::cycleHook(const ros::Time &time)
+bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 {
   eMatrixHom actual_left_foot_pose = bc_->getActualFootPose(+Side::LEFT);
   eMatrixHom actual_right_foot_pose = bc_->getActualFootPose(+Side::RIGHT);
@@ -242,7 +242,7 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
   return true;
 }
 
-bool CSVWALKINGAction::isOverHook(const ros::Time &time)
+bool CSVWALKINGActionPrev::isOverHook(const ros::Time &time)
 {
   if (bc_->getStateMachine()->queue_size() > 1)
   {
@@ -251,12 +251,12 @@ bool CSVWALKINGAction::isOverHook(const ros::Time &time)
   return false;
 }
 
-bool CSVWALKINGAction::endHook(const ros::Time &time)
+bool CSVWALKINGActionPrev::endHook(const ros::Time &time)
 {
   return true;
 }
 
-Eigen::VectorXd CSVWALKINGAction::std2eigen(std::vector<double> std_vec){
+Eigen::VectorXd CSVWALKINGActionPrev::std2eigen(std::vector<double> std_vec){
     Eigen::VectorXd eigen_vec = Eigen::Map<Eigen::VectorXd>(std_vec.data(), std_vec.size());
     return eigen_vec;
 }

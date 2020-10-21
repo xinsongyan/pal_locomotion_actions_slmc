@@ -2,6 +2,13 @@ com_traj.csv
 [t, x, y, z, xd, yd, zd]
 
 contact_state_trajectory.csv
+<<<<<<< HEAD
+[end_time, initial rfoot_pos, lfoot_pos, final swing foot pos, contact_state (1 or -1)]
+ 
+Note:
+Contact state is defined as
+Initial dsp (0.5 -> 1.0) -> ssp (1.0) -> dsp (1.0 ->-> ssp -> ...
+=======
 [end_time, rfoot_pos, lfoot_pos, goal_pos, contact_state]
 
 
@@ -16,3 +23,4 @@ ssp:
     lsp: +1
     rsp: -1
 
+>>>>>>> 10bf57ab45db13a92d2d58cdcc70576a193cc195
