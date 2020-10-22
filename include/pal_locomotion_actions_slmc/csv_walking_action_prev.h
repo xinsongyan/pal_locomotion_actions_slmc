@@ -39,6 +39,7 @@ struct TrajectoryFromCSV2 {
       Eigen::VectorXd time;
       Eigen::MatrixXd pos;
       Eigen::MatrixXd vel;
+      Eigen::MatrixXd acc;
 };
 
 struct ContactSequenceFromCSV2 {
@@ -105,6 +106,9 @@ private:
   std::vector<double> trajectory_vel_x_;
   std::vector<double> trajectory_vel_y_;
   std::vector<double> trajectory_vel_z_;
+    std::vector<double> trajectory_acc_x_;
+    std::vector<double> trajectory_acc_y_;
+    std::vector<double> trajectory_acc_z_;
 
   TrajectoryFromCSV2 com_traj_;
   TrajectoryFromCSV2 lfoot_traj_;

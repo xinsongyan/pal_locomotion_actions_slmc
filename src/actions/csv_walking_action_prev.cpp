@@ -89,11 +89,34 @@ bool CSVWALKINGActionPrev::getCSVTrajectory(const ros::NodeHandle &nh, const std
         ROS_INFO_STREAM("Fail to load " + key);
     }
 
+    key = "/" + name + "_trajectory/acc/x";
+    if (nh.getParam(key, trajectory_acc_x_)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+
+    key = "/" + name + "_trajectory/acc/y";
+    if (nh.getParam(key, trajectory_acc_y_)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+
+    key = "/" + name + "_trajectory/acc/z";
+    if (nh.getParam(key, trajectory_acc_z_)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+
     traj.pos.resize(3, std2eigen(trajectory_pos_x_).size());
     traj.vel.resize(3, traj.pos.cols());
+    traj.acc.resize(3, traj.pos.cols());
 
     traj.pos << std2eigen(trajectory_pos_x_).transpose(), std2eigen(trajectory_pos_y_).transpose(), std2eigen(trajectory_pos_z_).transpose();
     traj.vel << std2eigen(trajectory_vel_x_).transpose(), std2eigen(trajectory_vel_y_).transpose(), std2eigen(trajectory_vel_z_).transpose();
+    traj.acc << std2eigen(trajectory_acc_x_).transpose(), std2eigen(trajectory_acc_y_).transpose(), std2eigen(trajectory_acc_z_).transpose();
     ROS_INFO_STREAM(name + "_trajectory is generated.");
 }
 
@@ -165,8 +188,8 @@ bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
 
 bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 {
-  eVector3 targetCOM, targetCOM_vel;
-  targetCOM = actual_com_;
+  eVector3 targetCOM_pos, targetCOM_vel, targetCOM_acc;
+  targetCOM_pos = actual_com_;
   targetCOM_vel.setZero();
   
   if (cnt_== 0){
@@ -175,18 +198,21 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
   }
   if (time < ds_time_)
   {
-    targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+    targetCOM_pos = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
     targetCOM_vel = com_traj_.vel.col(cnt_);
+    targetCOM_acc = com_traj_.acc.col(cnt_);
 
-    bc_->setWeightDistribution(0.5 + 0.5 * (cnt_) / 500.0); // Left Side?
+//    bc_->setWeightDistribution(0.5 + 0.5 * (cnt_) / 500.0); // Left Side?
+      bc_->setWeightDistribution(0.5); // Left Side?
     cnt_ += 1;
   }
   else if (time < ss_time_) {
     
     bc_->setStanceLegIDs({Side::LEFT});
     bc_->setSwingLegIDs({Side::RIGHT});
-    targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+    targetCOM_pos = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
     targetCOM_vel = com_traj_.vel.col(cnt_);
+    targetCOM_acc = com_traj_.acc.col(cnt_);
 
     bc_->setWeightDistribution(1.0); // Left Side?
     cnt_ += 1;
@@ -195,50 +221,70 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     bc_->setStanceLegIDs({Side::RIGHT});
     bc_->setSwingLegIDs({Side::LEFT});
 
-    targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+    targetCOM_pos = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
     targetCOM_vel = com_traj_.vel.col(cnt_);
+    targetCOM_acc = com_traj_.acc.col(cnt_);
 
-    bc_->setWeightDistribution(0.0); // Left Side?
+    bc_->setWeightDistribution(0); // Right Side?
     cnt_ += 1;
   }
   else if (cnt_ < com_traj_.pos.cols()-1){
 
     bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
     bc_->setSwingLegIDs({});
-    targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+    targetCOM_pos = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
     targetCOM_vel = com_traj_.vel.col(cnt_);
-    bc_->setWeightDistribution( 0.5 * (cnt_ - 1500) / 500.0 ); // Left Side?
+    targetCOM_acc = com_traj_.acc.col(cnt_);
+//    bc_->setWeightDistribution( 0.5 * (cnt_ - 1500) / 500.0 );
+      bc_->setWeightDistribution( 0.5 );
     cnt_ += 1;
   }
   else{
-    targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+  bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
+  bc_->setSwingLegIDs({});
+    targetCOM_pos = actual_com_;
     targetCOM_vel = com_traj_.vel.col(cnt_);
+    targetCOM_acc = com_traj_.acc.col(cnt_);
     targetCOM_vel.setZero();
+    targetCOM_acc.setZero();
     bc_->setWeightDistribution(0.5); // Left Side?
+
+
   }
 
-  bc_->setDesiredFootState(static_cast<int>(+Side::LEFT), lf_pos_,
-                           eVector3(0., 0., 0.), eVector3(0., 0., 0.),
-                           eVector3(0., 0., 0.), eVector3(0., 0., 0.));
+  bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
+                           lf_pos_,
+                           eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.));
 
-  bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT), rf_pos_,
-                           eVector3(0., 0., 0.), eVector3(0., 0., 0.),
-                           eVector3(0., 0., 0.), eVector3(0., 0., 0.));
+  bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
+                           rf_pos_,
+                           eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.));
   
   if (fabs((internal_time_ - control_time_).toSec()) < 1e-3){
     ROS_INFO_STREAM("Done");
   }
 
-  eVector2 global_target_cop = targetCOM.head(2);
+  eVector2 global_target_cop = targetCOM_pos.head(2);
 
-  control(bc_,
-          rate_limiter_,
-          targetCOM,
-          targetCOM_vel,
-          global_target_cop,
-          parameters_.use_rate_limited_dcm_,
-          targetCOP_rate_limited_unclamped_,
-          targetCOP_unclamped_);
+//  control(bc_,
+//          rate_limiter_,
+//          targetCOM_pos,
+//          targetCOM_vel,
+//          global_target_cop,
+//          parameters_.use_rate_limited_dcm_,
+//          targetCOP_rate_limited_unclamped_,
+//          targetCOP_unclamped_);
+
+
+    bc_->setDesiredCOMPosition(targetCOM_pos);
+    bc_->setDesiredCOMVelocity(targetCOM_vel);
+    bc_->setDesiredCOMAcceleration(targetCOM_acc);
 
   bc_->setDesiredBaseOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
   bc_->setDesiredTorsoOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
