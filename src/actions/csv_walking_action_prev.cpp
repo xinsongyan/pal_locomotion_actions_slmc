@@ -140,6 +140,8 @@ bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
   ds_time_ = internal_time_ + ros::Duration(1.0);
   ss_time_ = internal_time_ + ros::Duration(2.0);
   sss_time_ = internal_time_ + ros::Duration(3.0);
+  final_time_ = internal_time_ + ros::Duration(4.0);
+
 
   actual_com_= bc_->getActualCOMPosition();
  
@@ -154,7 +156,7 @@ bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
                            eVector3(0., 0., 0.), eVector3(0., 0., 0.),
                            eVector3(0., 0., 0.), eVector3(0., 0., 0.));
 
-  bc_->setActualSide(+Side::LEFT);
+  // bc_->setActualSide(+Side::LEFT);
 
   cnt_ = 0;
 
@@ -163,14 +165,14 @@ bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
 
 bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 {
-  eMatrixHom actual_left_foot_pose = bc_->getActualFootPose(+Side::LEFT);
-  eMatrixHom actual_right_foot_pose = bc_->getActualFootPose(+Side::RIGHT);
-  eMatrixHom local_coordinate_frame = bc_->getActualFootPose(+Side::LEFT); // Right foot (Swing)
-
   eVector3 targetCOM, targetCOM_vel;
   targetCOM = actual_com_;
   targetCOM_vel.setZero();
- 
+  
+  if (cnt_== 0){
+    lf_pos_ = bc_->getActualFootPose(+Side::LEFT);
+    rf_pos_ = bc_->getActualFootPose(+Side::RIGHT);
+  }
   if (time < ds_time_)
   {
     targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
@@ -190,7 +192,6 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     cnt_ += 1;
   }
   else if (time < sss_time_) {
-    ROS_INFO_STREAM("HERE");
     bc_->setStanceLegIDs({Side::RIGHT});
     bc_->setSwingLegIDs({Side::LEFT});
 
@@ -203,11 +204,10 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
   else if (cnt_ < com_traj_.pos.cols()-1){
 
     bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
-
+    bc_->setSwingLegIDs({});
     targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
     targetCOM_vel = com_traj_.vel.col(cnt_);
-
-    bc_->setWeightDistribution(0.5); // Left Side?
+    bc_->setWeightDistribution( 0.5 * (cnt_ - 1500) / 500.0 ); // Left Side?
     cnt_ += 1;
   }
   else{
@@ -216,7 +216,15 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     targetCOM_vel.setZero();
     bc_->setWeightDistribution(0.5); // Left Side?
   }
-  std::cout << cnt_ << std::endl;
+
+  bc_->setDesiredFootState(static_cast<int>(+Side::LEFT), lf_pos_,
+                           eVector3(0., 0., 0.), eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.), eVector3(0., 0., 0.));
+
+  bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT), rf_pos_,
+                           eVector3(0., 0., 0.), eVector3(0., 0., 0.),
+                           eVector3(0., 0., 0.), eVector3(0., 0., 0.));
+  
   if (fabs((internal_time_ - control_time_).toSec()) < 1e-3){
     ROS_INFO_STREAM("Done");
   }

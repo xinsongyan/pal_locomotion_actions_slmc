@@ -5,7 +5,7 @@
 #include <pal_locomotion/state_machine/walking_action_base.h>
 #include <pal_ros_utils/reference/pose/pose_reference_minjerk.h>
 #include <pal_locomotion_actions_slmc/csv_utils.h>
-
+#include <pal_locomotion/polynomial.h>
 
 namespace pal_locomotion
 {
@@ -84,10 +84,8 @@ private:
   SupporType support_type_;
 
   ros::Time internal_time_;
+  ros::Time initial_time_;
   ros::Time control_time_;
-  ros::Time ds_time_;
-  ros::Time ss_time_;
-  ros::Time sss_time_;
 
   int cnt_;
 
@@ -112,6 +110,9 @@ private:
   TrajectoryFromCSV lfoot_traj_;
   TrajectoryFromCSV rfoot_traj_;
   ContactSequenceFromCSV cs_;
+
+  PolynomialTraj<3>* r_swing_traj_;
+  PolynomialTraj<3>* l_swing_traj_;
 
   int current_cs_;
   bool cs_change_;

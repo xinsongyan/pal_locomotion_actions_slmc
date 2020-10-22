@@ -85,6 +85,7 @@ private:
   ros::Time ds_time_;
   ros::Time ss_time_;
   ros::Time sss_time_;
+  ros::Time final_time_;
 
   int cnt_;
 
@@ -112,6 +113,8 @@ private:
 
   int current_cs_;
   bool cs_change_;
+
+  eMatrixHom lf_pos_, rf_pos_;
 };
 }
 

@@ -206,11 +206,8 @@ bool CSVWALKINGAction::enterHook(const ros::Time &time)
   support_type_ = bc_->getActualSupportType();
 
   internal_time_ = time;
-
+  initial_time_ = time;
   control_time_ = internal_time_ + ros::Duration(com_traj_.time[com_traj_.time.size()-1]);
-  ds_time_ = internal_time_ + ros::Duration(1.0);
-  ss_time_ = internal_time_ + ros::Duration(2.0);
-  sss_time_ = internal_time_ + ros::Duration(3.0);
 
   actual_com_= bc_->getActualCOMPosition();
  
@@ -242,8 +239,16 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
   targetCOM = actual_com_;
   targetCOM_vel.setZero();
   
-  ros::Duration cs_duration = time - internal_time_;
+  ros::Duration cs_duration = internal_time_ - initial_time_;
   double cs_time = cs_duration.toSec() + cs_duration.toNSec() * 1e-9;
+
+  std::cout << cs_.type(current_cs_)  << cs_time <<  std::endl;
+  if (cs_.end_time(current_cs_) < cs_time ){
+      current_cs_ += 1;
+      cs_change_ = true;
+  }
+ 
+
   if (cnt_ < com_traj_.pos.cols()-1){
     if (cs_.type(current_cs_) == 0){
       if (current_cs_ == 0){
@@ -264,12 +269,12 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
     else if (cs_.type(current_cs_) == 1){
       bc_->setStanceLegIDs({Side::LEFT});
       bc_->setSwingLegIDs({Side::RIGHT});
-      bc_->setWeightDistribution(1.);
+      bc_->setWeightDistribution(1.0);
     }
     else if (cs_.type(current_cs_) == -1){
       bc_->setStanceLegIDs({Side::RIGHT});
       bc_->setSwingLegIDs({Side::LEFT});
-      bc_->setWeightDistribution(0.);
+      bc_->setWeightDistribution(0.0);
     }
     else{
       bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
@@ -294,6 +299,9 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
     ROS_INFO_STREAM("Done");
   }
 
+
+ 
+ 
   eVector2 global_target_cop = targetCOM.head(2);
 
   control(bc_,
