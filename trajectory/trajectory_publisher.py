@@ -6,6 +6,7 @@ import numpy as np
 def publish_trajectory(filename, param_name):
     filename_ = os.getcwd() + '/src/pal_locomotion_actions_slmc/trajectory/' + filename
     filename_ = '/home/user/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/'  + filename
+    filename_ = os.getcwd() + '/' + filename
     trajectory = np.genfromtxt(filename_, delimiter=',')
     trajectory_dict={'t':trajectory[:,0].tolist(),
                      'pos':{'x':trajectory[:,1].tolist(),
@@ -23,6 +24,7 @@ def publish_trajectory(filename, param_name):
 def publish_contactsequence(filename, param_name):
     filename_ = os.getcwd() + '/src/pal_locomotion_actions_slmc/trajectory/' + filename
     filename_ = '/home/user/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/'  + filename
+    filename_ = os.getcwd() + '/' + filename
     trajectory = np.genfromtxt(filename_, delimiter=',')
     trajectory_dict={'t':trajectory[:,0].tolist(),
                      'cs':trajectory[:,1].tolist()}
@@ -35,4 +37,5 @@ if __name__ == "__main__":
             publish_trajectory(filename='lfoot_trajectory.csv', param_name='lfoot_trajectory')
             publish_trajectory(filename='rfoot_trajectory.csv', param_name='rfoot_trajectory')
             publish_contactsequence(filename='contact_state_trajectory.csv', param_name='contact_sequence')
+            break
     except rospy.ROSInterruptException: pass
