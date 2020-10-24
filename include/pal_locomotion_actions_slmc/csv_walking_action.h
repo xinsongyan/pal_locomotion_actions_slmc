@@ -6,6 +6,7 @@
 #include <pal_ros_utils/reference/pose/pose_reference_minjerk.h>
 #include <pal_locomotion_actions_slmc/csv_utils.h>
 #include <pal_locomotion/polynomial.h>
+#include <pal_ros_utils/reference/pose/pose_reference_minjerk_topic.h>
 
 namespace pal_locomotion
 {
@@ -116,6 +117,7 @@ private:
 
   int current_cs_;
   bool cs_change_;
+  pal_robot_tools::MinJerkGeneratorPtr force_distribution_interpolator_;
 };
 }
 

@@ -34,6 +34,7 @@ bool CSVWALKINGAction::configure(ros::NodeHandle &nh, BController *bController,
   getCSVTrajectory(nh, "com", com_traj_);
   getCSVContactSequence(nh, cs_);
 
+  force_distribution_interpolator_.reset(new MinJerkGenerator());
   current_cs_ = 0;
   cs_change_ = true;
   return true;
@@ -207,7 +208,7 @@ bool CSVWALKINGAction::enterHook(const ros::Time &time)
 
   internal_time_ = time;
   initial_time_ = time;
-  control_time_ = internal_time_ + ros::Duration(com_traj_.time[com_traj_.time.size()-1]);
+  control_time_ = internal_time_ + ros::Duration(cs_.end_time(current_cs_));
 
   actual_com_= bc_->getActualCOMPosition();
  
@@ -222,7 +223,7 @@ bool CSVWALKINGAction::enterHook(const ros::Time &time)
                            eVector3(0., 0., 0.), eVector3(0., 0., 0.),
                            eVector3(0., 0., 0.), eVector3(0., 0., 0.));
 
-  bc_->setActualSide(+Side::LEFT);
+  bc_->setActualSide(+Side::RIGHT);
 
   cnt_ = 0;
 
@@ -233,74 +234,86 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
 {
   eMatrixHom actual_left_foot_pose = bc_->getActualFootPose(+Side::LEFT);
   eMatrixHom actual_right_foot_pose = bc_->getActualFootPose(+Side::RIGHT);
-  eMatrixHom local_coordinate_frame = bc_->getActualFootPose(+Side::LEFT); // Right foot (Swing)
+  eMatrixHom local_coordinate_frame = bc_->getActualFootPose(+Side::RIGHT); // Right foot (Swing)
 
   eVector3 targetCOM, targetCOM_vel;
   targetCOM = actual_com_;
   targetCOM_vel.setZero();
-  
-  ros::Duration cs_duration = internal_time_ - initial_time_;
-  double cs_time = cs_duration.toSec() + cs_duration.toNSec() * 1e-9;
 
-  std::cout << cs_.type(current_cs_)  << cs_time <<  std::endl;
-  if (cs_.end_time(current_cs_) < cs_time ){
+  double weight_distribution;
+  double weight_distribution_d;
+  double weight_distribution_dd;
+
+  using namespace std;
+  if (control_time_ < internal_time_ ){
       current_cs_ += 1;
       cs_change_ = true;
   }
- 
 
-  if (cnt_ < com_traj_.pos.cols()-1){
-    if (cs_.type(current_cs_) == 0){
-      if (current_cs_ == 0){
-        bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
+  //update control time
+  if (cs_change_ && current_cs_ < cs_.end_time.size())
+    control_time_ = initial_time_ + ros::Duration(cs_.end_time(current_cs_));
 
-        if (cs_.type(current_cs_+1) == -1)
-          bc_->setWeightDistribution(0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_))   );
-        else
-          bc_->setWeightDistribution(1.0 - 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_))   );
-      }
-      else{
-        if (cs_.type(current_cs_+1) == -1)
-         bc_->setWeightDistribution(0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )   );
-        else
-         bc_->setWeightDistribution(1.0 - 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )   );
-      }
-    } 
-    else if (cs_.type(current_cs_) == 1){
-      bc_->setStanceLegIDs({Side::LEFT});
-      bc_->setSwingLegIDs({Side::RIGHT});
-      bc_->setWeightDistribution(1.0);
+  if (cnt_ < com_traj_.pos.cols()-1){ // whole control loop
+    if (cs_.type(current_cs_) == 0){ // for initial dsp
+        if (cs_change_){
+            ROS_INFO_STREAM("DSP to remove contact");
+            bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
+
+            if (current_cs_ == 0){
+                if (cs_.type(current_cs_+1) == -1)
+                    force_distribution_interpolator_->initialize({initial_time_, control_time_}, {0.5, 0.}, {0., 0.}, {0., 0.});
+                else
+                    force_distribution_interpolator_->initialize({initial_time_, control_time_}, {0.5, 1.}, {0., 0.}, {0., 0.});
+            }
+            else{
+                ros::Time control_time_prev = initial_time_ + ros::Duration(cs_.end_time(current_cs_-1));
+                if (cs_.type(current_cs_+1) == -1)
+                    force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {0.5, 0.}, {0., 0.}, {0., 0.});
+                else
+                    force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {0.5, 1.}, {0., 0.}, {0., 0.});
+            }
+            cs_change_ = false;
+            ROS_INFO_STREAM("DSP to remove contact");
+        }
+        force_distribution_interpolator_->query(internal_time_, weight_distribution, weight_distribution_d, weight_distribution_dd);
+        bc_->setWeightDistribution(weight_distribution);
     }
-    else if (cs_.type(current_cs_) == -1){
-      bc_->setStanceLegIDs({Side::RIGHT});
-      bc_->setSwingLegIDs({Side::LEFT});
-      bc_->setWeightDistribution(0.0);
+    else if (cs_.type(current_cs_) == 1){ // for ssp of LEFT support
+        if (cs_change_){
+            ROS_INFO_STREAM("SSP with LEFT SUPPORT PHASE");
+            bc_->setStanceLegIDs({Side::LEFT});
+            bc_->setSwingLegIDs({Side::RIGHT});
+            bc_->setWeightDistribution(1.0);
+            cs_change_ = false;
+        }
     }
-    else{
-      bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
-
-      if (cs_.type(current_cs_-1) == -1)
-       bc_->setWeightDistribution(0.5 - 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )  );
-      else
-       bc_->setWeightDistribution(0.5 + 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )  );
+    else if (cs_.type(current_cs_) == -1){ // for ssp of Right support
+        if (cs_change_){
+            ROS_INFO_STREAM("SSP with RIGHT SUPPORT PHASE");
+            bc_->setStanceLegIDs({Side::RIGHT});
+            bc_->setSwingLegIDs({Side::LEFT});
+            bc_->setWeightDistribution(0.0);
+            cs_change_ = false;
+        }
     }
-
-
+    else { // for final dsp
+        if (cs_change_){
+            ROS_INFO_STREAM("DSP to recover balance");
+            bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
+            bc_->setSwingLegIDs({});
+            cs_change_ = false;
+        }
+    }
     targetCOM =  actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
     targetCOM_vel = com_traj_.vel.col(cnt_);
-    cnt_ += 1;
+    cnt_++;
   }
   else{
     targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
     targetCOM_vel.setZero();
   }
 
-  if (fabs((internal_time_ - control_time_).toSec()) < 1e-3){
-    ROS_INFO_STREAM("Done");
-  }
-
-
- 
  
   eVector2 global_target_cop = targetCOM.head(2);
 
@@ -315,6 +328,79 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
 
   bc_->setDesiredBaseOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
   bc_->setDesiredTorsoOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
+
+  
+//     if (cs_.type(current_cs_) == 0){
+//       if (current_cs_ == 0){
+//         if (cs_change_){
+//             bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
+//             if (cs_.type(current_cs_+1) == -1)
+//                 force_distribution_interpolator_->initialize({ros::Time(), })
+//             cs_change_ = false;
+//         }
+//         if (cs_.type(current_cs_+1) == -1){
+//           bc_->setWeightDistribution(0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_))   );
+//         }
+//         else
+//           bc_->setWeightDistribution(1.0 - 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_))   );
+        
+//       }
+//       else{
+//         if (cs_.type(current_cs_+1) == -1)
+//          bc_->setWeightDistribution(0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )   );
+//         else
+//          bc_->setWeightDistribution(1.0 - 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )   );
+//       }
+//     } 
+//     else if (cs_.type(current_cs_) == 1){
+//       bc_->setStanceLegIDs({Side::LEFT});
+//       bc_->setSwingLegIDs({Side::RIGHT});
+//       bc_->setWeightDistribution(1.0);
+//     }
+//     else if (cs_.type(current_cs_) == -1){
+//       bc_->setStanceLegIDs({Side::RIGHT});
+//       bc_->setSwingLegIDs({Side::LEFT});
+//       bc_->setWeightDistribution(0.0);
+//     }
+//     else{
+//       bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
+
+//       if (cs_.type(current_cs_-1) == -1)
+//        bc_->setWeightDistribution(0.5 - 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )  );
+//       else
+//        bc_->setWeightDistribution(0.5 + 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )  );
+//     }
+
+
+//     targetCOM =  actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+//     targetCOM_vel = com_traj_.vel.col(cnt_);
+//     cnt_ += 1;
+//   }
+//   else{
+//     targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
+//     targetCOM_vel.setZero();
+//   }
+
+//   if (fabs((internal_time_ - control_time_).toSec()) < 1e-3){
+//     ROS_INFO_STREAM("Done");
+//   }
+
+
+ 
+ 
+//   eVector2 global_target_cop = targetCOM.head(2);
+
+//   control(bc_,
+//           rate_limiter_,
+//           targetCOM,
+//           targetCOM_vel,
+//           global_target_cop,
+//           parameters_.use_rate_limited_dcm_,
+//           targetCOP_rate_limited_unclamped_,
+//           targetCOP_unclamped_);
+
+//   bc_->setDesiredBaseOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
+//   bc_->setDesiredTorsoOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
 
 
   
