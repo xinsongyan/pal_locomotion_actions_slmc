@@ -33,8 +33,10 @@ def launch_talos_dcm_walking_controller():
 
 def push_trajectory_to_ros_param_server():
     import numpy as np
+    from os.path import expanduser
+    home = expanduser("~")
 
-    filename = '/home/xin/PycharmProjects/trajectory_loader/trajectory/com_trajectory.csv'
+    filename = home + '/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/com_trajectory.csv'
     com_trajectory = np.genfromtxt(filename, delimiter=',')
     com_trajectory_dict={'t':com_trajectory[:,0].tolist(),
                          'pos':{'x':com_trajectory[:,1].tolist(), 'y':com_trajectory[:,2].tolist(), 'z':com_trajectory[:,3].tolist()},
@@ -55,13 +57,16 @@ def call_com_tracking_action():
 
     push_action_service = rospy.ServiceProxy('/biped_walking_dcm_controller/push_actions', PushActions)
 
-    new_action = ActionWithParameters(action_type='pal_locomotion::CSVCOMAction')
+    new_action = ActionWithParameters(action_type='pal_locomotion::CSVWALKINGActionPrev')
 
     request = PushActionsRequest(actions=[new_action])
     print ('requst',request)
     response = push_action_service(request)
     print ('response', response)
 
+def pause(time_in_sec):
+    import time
+    time.sleep(time_in_sec)
 
 
 def main():
@@ -69,9 +74,11 @@ def main():
     launch_talos_gazebo()
     launch_talos_dcm_walking_controller()
     push_trajectory_to_ros_param_server()
-    # call_com_tracking_action()
+    pause(2)
+    call_com_tracking_action()
     while True:
         pass
 
 if __name__ == "__main__":
     main()
+

@@ -272,19 +272,30 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 
   eVector2 global_target_cop = targetCOM_pos.head(2);
 
-//  control(bc_,
-//          rate_limiter_,
-//          targetCOM_pos,
-//          targetCOM_vel,
-//          global_target_cop,
-//          parameters_.use_rate_limited_dcm_,
-//          targetCOP_rate_limited_unclamped_,
-//          targetCOP_unclamped_);
+  control(bc_,
+          rate_limiter_,
+          targetCOM_pos,
+          targetCOM_vel,
+          global_target_cop,
+          parameters_.use_rate_limited_dcm_,
+          targetCOP_rate_limited_unclamped_,
+          targetCOP_unclamped_);
 
 
-    bc_->setDesiredCOMPosition(targetCOM_pos);
-    bc_->setDesiredCOMVelocity(targetCOM_vel);
-    bc_->setDesiredCOMAcceleration(targetCOM_acc);
+//    bc_->setDesiredCOMPosition(targetCOM_pos);
+//    bc_->setDesiredCOMVelocity(targetCOM_vel);
+//    bc_->setDesiredCOMAcceleration(targetCOM_acc);
+//
+//    bc_->setDesiredICP(eVector3(targetCOM_pos.x(), targetCOM_pos.y(), 0.));
+//    bc_->setDesiredCOPReference(eVector3(targetCOM_pos.x(), targetCOM_pos.y(), 0.));
+//
+//
+//    eVector2 targetCoM_pos2D(targetCOM_pos.x(), targetCOM_pos.y());
+//    eVector2 targetCoM_vel2D(targetCOM_vel.x(), targetCOM_vel.y());
+//    double w = sqrt(bc_->getParameters()->gravity_ / bc_->getParameters()->z_height_);
+//    Eigen::Vector2d actualDCM = targetCoM_pos2D + targetCoM_vel2D / w;
+//    bc_->setActualICP(eVector3(actualDCM.x(), actualDCM.y(), 0.));
+
 
   bc_->setDesiredBaseOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
   bc_->setDesiredTorsoOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));

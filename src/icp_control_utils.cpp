@@ -97,12 +97,10 @@ void control(BController *bc, const math_utils::HighPassRateLimiterVector2dPtr &
   Eigen::Vector2d desiredCOMd;
   Eigen::Vector2d desiredCOMdd;
 
-  desiredCOMdd = pow(w, 2) * (actualCOM_2d - targetCOP_clamped);
-
   ros::Duration dt = bc->getControllerDt();
-  desiredCOM =
-      actualCOM_2d + actualCOM_vel_2d * dt.toSec() + desiredCOMdd * pow(dt.toSec(), 2) * 0.5;
+  desiredCOM = actualCOM_2d + actualCOM_vel_2d * dt.toSec() + desiredCOMdd * pow(dt.toSec(), 2) * 0.5;
   desiredCOMd = actualCOM_vel_2d + desiredCOMdd * dt.toSec();
+  desiredCOMdd = pow(w, 2) * (actualCOM_2d - targetCOP_clamped);
 
   bc->setDesiredCOMPosition(eVector3(desiredCOM.x(), desiredCOM.y(), targetDCM.z()));
   bc->setDesiredCOMVelocity(eVector3(desiredCOMd.x(), desiredCOMd.x(), targetDCM_vel.z()));
