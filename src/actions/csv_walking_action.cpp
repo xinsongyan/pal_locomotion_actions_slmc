@@ -302,8 +302,16 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
             ROS_INFO_STREAM("DSP to recover balance");
             bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
             bc_->setSwingLegIDs({});
+
+            ros::Time control_time_prev = initial_time_ + ros::Duration(cs_.end_time(current_cs_-1));
+            if (cs_.type(current_cs_-1) == -1)
+                force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {0.0, 0.5}, {0., 0.}, {0., 0.});
+            else
+                force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {1.0, 0.5}, {0., 0.}, {0., 0.});
             cs_change_ = false;
         }
+        force_distribution_interpolator_->query(internal_time_, weight_distribution, weight_distribution_d, weight_distribution_dd);
+        bc_->setWeightDistribution(weight_distribution);
     }
     targetCOM =  actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
     targetCOM_vel = com_traj_.vel.col(cnt_);
