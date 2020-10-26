@@ -2,6 +2,8 @@ import time
 import rospy
 import roslaunch
 
+from trajectory.dsp_test2.trajectory_publisher import publish_all
+
 
 def launch_roscore():
     import subprocess
@@ -36,7 +38,8 @@ def push_trajectory_to_ros_param_server():
     from os.path import expanduser
     home = expanduser("~")
 
-    filename = home + '/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/com_trajectory.csv'
+    # filename = home + '/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/com_trajectory.csv'
+    filename = home + '/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/dsp_test2/com_trajectory.csv'
     com_trajectory = np.genfromtxt(filename, delimiter=',')
     com_trajectory_dict={'t':com_trajectory[:,0].tolist(),
                          'pos':{'x':com_trajectory[:,1].tolist(), 'y':com_trajectory[:,2].tolist(), 'z':com_trajectory[:,3].tolist()},
@@ -46,13 +49,15 @@ def push_trajectory_to_ros_param_server():
 
 
 
+
+
 def call_com_tracking_action():
 
     from pal_locomotion_msgs.srv import PushActions, PushActionsRequest
     from pal_locomotion_msgs.msg import ActionWithParameters
 
     # rospy.init_node('push_csv_com_action_node', anonymous=True)
-
+    rospy.sleep(3)
     rospy.wait_for_service('/biped_walking_dcm_controller/push_actions')
 
     push_action_service = rospy.ServiceProxy('/biped_walking_dcm_controller/push_actions', PushActions)
@@ -73,8 +78,8 @@ def main():
     launch_roscore()
     launch_talos_gazebo()
     launch_talos_dcm_walking_controller()
-    push_trajectory_to_ros_param_server()
-    pause(2)
+    publish_all()
+
     call_com_tracking_action()
     while True:
         pass

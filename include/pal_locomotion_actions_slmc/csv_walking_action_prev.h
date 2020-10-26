@@ -51,6 +51,13 @@ struct ContactSequenceFromCSV2 {
       Eigen::VectorXd type;
 };
 
+struct Trajectory{
+        Eigen::VectorXd time;
+        Eigen::MatrixXd pos;
+        Eigen::MatrixXd vel;
+        Eigen::MatrixXd acc;
+};
+
 class CSVWALKINGActionPrev : public WalkingActionBase
 {
 public:
@@ -69,8 +76,7 @@ public:
 
   bool endHook(const ros::Time &time) override;
 
-  bool getCSVTrajectory(const ros::NodeHandle &nh, const std::string & name, TrajectoryFromCSV2 & traj);
-  bool getCSVContactSequence(const ros::NodeHandle &nh, ContactSequenceFromCSV2 & cs);
+  bool getTrajectoryFromRosParam(const ros::NodeHandle &nh, const std::string & name, Trajectory & traj);
 
   Eigen::VectorXd std2eigen(const std::vector<double> std_vec);
 
@@ -82,13 +88,24 @@ private:
   SupporType support_type_;
 
   ros::Time internal_time_;
+
   ros::Time control_time_;
   ros::Time ds_time_;
   ros::Time ss_time_;
   ros::Time sss_time_;
   ros::Time final_time_;
 
+
+  ros::Time begin_time_;
+  ros::Duration time_from_begin_;
+
+
+
+
   int cnt_;
+  ros::Duration dt_;
+  double cnt_time_;
+
 
 
   CSVWALKINGActionPrevParameters parameters_;
@@ -97,28 +114,19 @@ private:
   eVector2 targetCOP_rate_limited_unclamped_;
   eVector2 targetCOP_unclamped_;
 
-  // trajectory container
-  std::vector<double> trajectory_t_;
-  std::vector<int> contact_type_;
-  std::vector<double> trajectory_pos_x_;
-  std::vector<double> trajectory_pos_y_;
-  std::vector<double> trajectory_pos_z_;
-  std::vector<double> trajectory_vel_x_;
-  std::vector<double> trajectory_vel_y_;
-  std::vector<double> trajectory_vel_z_;
-    std::vector<double> trajectory_acc_x_;
-    std::vector<double> trajectory_acc_y_;
-    std::vector<double> trajectory_acc_z_;
+  // trajectory
+    Trajectory com_traj_;
+    Eigen::MatrixXd support_durations_;
+    Eigen::MatrixXd support_indexes_;
+    Eigen::MatrixXd support_end_times_;
+    int num_of_phases_;
 
-  TrajectoryFromCSV2 com_traj_;
-  TrajectoryFromCSV2 lfoot_traj_;
-  TrajectoryFromCSV2 rfoot_traj_;
-  ContactSequenceFromCSV2 cs_;
-
-  int current_cs_;
+    int current_cs_;
   bool cs_change_;
 
   eMatrixHom lf_pos_, rf_pos_;
+    eMatrixHom lf_up_pos_, rf_up_pos_;
+    eVector3 ini_com_pos_;
 };
 }
 
