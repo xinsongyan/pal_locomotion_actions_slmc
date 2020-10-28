@@ -2,13 +2,18 @@
 #include <pal_locomotion_actions_slmc/icp_control_utils.h>
 #include <math_utils/geometry_tools.h>
 
+#include <pal_locomotion_actions_slmc/swing_trajectory.h>
+
 using namespace math_utils;
 using namespace pal_robot_tools;
 
 
 #include <ros/ros.h>
-
-
+#include <cstdint>
+#include <algorithm>
+#include <iostream>
+#include <iomanip>
+#include <random>
 
 namespace pal_locomotion
 {
@@ -232,29 +237,22 @@ bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
     ROS_INFO_STREAM( "dt_:");
     ROS_INFO_STREAM( dt_.toSec());
 
-    lf_pos_ = bc_->getActualFootPose(+Side::LEFT);
-    rf_pos_ = bc_->getActualFootPose(+Side::RIGHT);
-
-
-
+    ini_lf_pose_ = bc_->getActualFootPose(+Side::LEFT);
+    ini_rf_pose_ = bc_->getActualFootPose(+Side::RIGHT);
     ini_com_pos_ = bc_->getActualCOMPosition();
-    ROS_INFO_STREAM( "lf_pos_:");
-    ROS_INFO_STREAM( lf_pos_.translation());
-    ROS_INFO_STREAM( "rf_pos_:");
-    ROS_INFO_STREAM( rf_pos_.translation());
+
+    ROS_INFO_STREAM( "ini_lf_pose_:");
+    ROS_INFO_STREAM( ini_lf_pose_.translation());
+    ROS_INFO_STREAM( "ini_rf_pose_:");
+    ROS_INFO_STREAM( ini_rf_pose_.translation());
     ROS_INFO_STREAM( "ini_com_pos_:");
     ROS_INFO_STREAM( ini_com_pos_);
 
 
-    lf_up_pos_ = lf_pos_;
-    rf_up_pos_ = rf_pos_;
-    lf_up_pos_.translation()(2) = 0.04;
-    rf_up_pos_.translation()(2) = 0.04;
 
-    ROS_INFO_STREAM( "lf_up_pos_:");
-    ROS_INFO_STREAM( lf_up_pos_.translation());
-    ROS_INFO_STREAM( "rf_up_pos_:");
-    ROS_INFO_STREAM( rf_up_pos_.translation());
+    swing_height_ = 0.05;
+
+
 
   return true;
 }
@@ -263,7 +261,7 @@ bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
 
 bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 {
-//    ROS_INFO_STREAM( "CSVWALKINGActionPrev::cycleHook()");
+    ROS_INFO_STREAM( "CSVWALKINGActionPrev::cycleHook()");
 
 
 
@@ -272,16 +270,33 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
   if (cnt_ > com_traj_.time.size()-1) {
       cnt_ = com_traj_.time.size()-1;
   }
-//    ROS_INFO_STREAM( time_from_begin_.toSec());
-//    ROS_INFO_STREAM( cnt_);
+    ROS_INFO_STREAM( "time_from_begin_.toSec():");
+    ROS_INFO_STREAM( time_from_begin_.toSec());
+    ROS_INFO_STREAM( "cnt_:");
+    ROS_INFO_STREAM( cnt_);
 
-    int cur_support_index = 6666;
+    int cur_phase_index = 0;
+    int cur_support_index = 0;
     for (int i=0; i < num_of_phases_; i++){
         if (time_from_begin_.toSec()>support_end_times_(i)){
+            cur_phase_index = i;
             cur_support_index = support_indexes_(i);
             }
     }
-//    ROS_INFO_STREAM( cur_support_index);
+    ROS_INFO_STREAM( "cur_phase_index:");
+    ROS_INFO_STREAM( cur_phase_index);
+    ROS_INFO_STREAM( "cur_support_index:");
+    ROS_INFO_STREAM( cur_support_index);
+
+    
+    double cur_phase_duration = support_durations_(cur_phase_index);
+    ROS_INFO_STREAM( "cur_phase_duration:");
+    ROS_INFO_STREAM( cur_phase_duration);
+
+    double cur_phase_time;
+    cur_phase_time = time_from_begin_.toSec() - support_end_times_(cur_phase_index);
+    ROS_INFO_STREAM( "cur_phase_time:");
+    ROS_INFO_STREAM( cur_phase_time);
 
     eVector3 targetCOM_pos, targetCOM_vel, targetCOM_acc;
     targetCOM_pos = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
@@ -292,19 +307,29 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 
     if (cur_support_index == 0) // double support
     {
+//        if (support_indexes_(cur_phase_index+1) == -1){
+//            double w = 0.5 - cur_phase_time/cur_phase_duration * 0.5;
+//            w = clamp(w,0.0,1.0);
+//            bc_->setWeightDistribution(w); // 0.5->0.0
+//        }
+//        if (support_indexes_(cur_phase_index+1) == 1){
+//            double w = 0.5 + cur_phase_time/cur_phase_duration * 0.5;
+//            w = clamp(w,0.0,1.0);
+//            bc_->setWeightDistribution(w); // 0.5->1.0
+//        }
         bc_->setWeightDistribution(0.5);
         bc_->setActualSupportType(SupporType::DS);
         bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
         bc_->setSwingLegIDs({});
         bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
-                                 lf_pos_,
+                                 ini_lf_pose_,
                                  eVector3(0., 0., 0.),
                                  eVector3(0., 0., 0.),
                                  eVector3(0., 0., 0.),
                                  eVector3(0., 0., 0.));
 
         bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-                                 rf_pos_,
+                                 ini_rf_pose_,
                                  eVector3(0., 0., 0.),
                                  eVector3(0., 0., 0.),
                                  eVector3(0., 0., 0.),
@@ -318,17 +343,23 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
         bc_->setActualSupportType(SupporType::SS);
         bc_->setStanceLegIDs({Side::LEFT});
         bc_->setSwingLegIDs({Side::RIGHT});
+
+
+
         bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
-                                 lf_pos_,
+                                 ini_lf_pose_,
                                  eVector3(0., 0., 0.),
                                  eVector3(0., 0., 0.),
                                  eVector3(0., 0., 0.),
                                  eVector3(0., 0., 0.));
 
+        SwingTrajectory3D swing_trajectory(ini_rf_pose_, ini_rf_pose_, cur_phase_duration, swing_height_);
+        Eigen::Isometry3d target_pose = swing_trajectory.pose(cur_phase_time);
+
         bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-                                 rf_up_pos_,
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.),
+                                 target_pose,
+                                 swing_trajectory.vel(cur_phase_time),
+                                 swing_trajectory.acc(cur_phase_time),
                                  eVector3(0., 0., 0.),
                                  eVector3(0., 0., 0.));
 
@@ -339,15 +370,20 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
         bc_->setActualSupportType(SupporType::SS);
         bc_->setStanceLegIDs({Side::RIGHT});
         bc_->setSwingLegIDs({Side::LEFT});
+
+
+        SwingTrajectory3D swing_trajectory(ini_lf_pose_, ini_lf_pose_, cur_phase_duration, swing_height_);
+        Eigen::Isometry3d target_pose = swing_trajectory.pose(cur_phase_time);
+
         bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
-                                 lf_up_pos_,
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.),
+                                 target_pose,
+                                 swing_trajectory.vel(cur_phase_time),
+                                 swing_trajectory.acc(cur_phase_time),
                                  eVector3(0., 0., 0.),
                                  eVector3(0., 0., 0.));
 
         bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-                                 rf_pos_,
+                                 ini_rf_pose_,
                                  eVector3(0., 0., 0.),
                                  eVector3(0., 0., 0.),
                                  eVector3(0., 0., 0.),
