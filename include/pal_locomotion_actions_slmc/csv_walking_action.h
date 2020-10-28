@@ -112,12 +112,12 @@ private:
   TrajectoryFromCSV rfoot_traj_;
   ContactSequenceFromCSV cs_;
 
-  PolynomialTraj<3>* r_swing_traj_;
-  PolynomialTraj<3>* l_swing_traj_;
-
   int current_cs_;
   bool cs_change_;
   pal_robot_tools::MinJerkGeneratorPtr force_distribution_interpolator_;
+  pal_robot_tools::MinJerkGenerator l_swing_traj1_, l_swing_traj2_, r_swing_traj1_, r_swing_traj2_;
+
+  eMatrixHom initial_left_foot_pose_, initial_right_foot_pose_;
 };
 }
 

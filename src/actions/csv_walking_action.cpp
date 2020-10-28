@@ -259,60 +259,116 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
         if (cs_change_){
             ROS_INFO_STREAM("DSP to remove contact");
             bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
-
+            bc_->setSwingLegIDs({});
             if (current_cs_ == 0){
                 if (cs_.type(current_cs_+1) == -1)
                     force_distribution_interpolator_->initialize({initial_time_, control_time_}, {0.5, 0.}, {0., 0.}, {0., 0.});
                 else
                     force_distribution_interpolator_->initialize({initial_time_, control_time_}, {0.5, 1.}, {0., 0.}, {0., 0.});
             }
-            else{
+            else if (current_cs_ < cs_.end_time.size()) {
+                ros::Time control_time_prev = initial_time_ + ros::Duration(cs_.end_time(current_cs_-1));
+                if (cs_.type(current_cs_-1) == -1)
+                    force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {0.0, 1.0}, {0., 0.}, {0., 0.});
+                else
+                    force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {1.0, 0.0}, {0., 0.}, {0., 0.});
+            }
+            else { // final dsp
                 ros::Time control_time_prev = initial_time_ + ros::Duration(cs_.end_time(current_cs_-1));
                 if (cs_.type(current_cs_+1) == -1)
-                    force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {0.5, 0.}, {0., 0.}, {0., 0.});
+                    force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {1.0, 0.5}, {0., 0.}, {0., 0.});
                 else
-                    force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {0.5, 1.}, {0., 0.}, {0., 0.});
+                    force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {0.0, 0.5}, {0., 0.}, {0., 0.});
             }
             cs_change_ = false;
-            ROS_INFO_STREAM("DSP to remove contact");
         }
         force_distribution_interpolator_->query(internal_time_, weight_distribution, weight_distribution_d, weight_distribution_dd);
         bc_->setWeightDistribution(weight_distribution);
     }
     else if (cs_.type(current_cs_) == 1){ // for ssp of LEFT support
+        ros::Time control_time_prev = control_time_ - ros::Duration((cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1)));
+        ros::Time control_time_half = control_time_prev + ros::Duration(  (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1))/2.0) ;
+
         if (cs_change_){
             ROS_INFO_STREAM("SSP with LEFT SUPPORT PHASE");
             bc_->setStanceLegIDs({Side::LEFT});
             bc_->setSwingLegIDs({Side::RIGHT});
             bc_->setWeightDistribution(1.0);
+            
+            initial_right_foot_pose_ = actual_right_foot_pose;
+            l_swing_traj1_.initialize({control_time_prev, control_time_half}, {actual_right_foot_pose.translation().z(), actual_right_foot_pose.translation().z() + 0.05}, {0., 0.}, {0., 0.});
+            l_swing_traj2_.initialize({control_time_half, control_time_}, {actual_right_foot_pose.translation().z()+0.05, actual_right_foot_pose.translation().z()}, {0., 0.}, {0., 0.});
             cs_change_ = false;
         }
+
+        double height, height_d, height_dd;
+        if (internal_time_ <= control_time_half){
+            l_swing_traj1_.query(internal_time_, height, height_d, height_dd);
+        }
+        else{
+            l_swing_traj2_.query(internal_time_, height, height_d, height_dd);
+        }
+
+        eMatrixHom target_foot_pose =  initial_right_foot_pose_;
+        target_foot_pose.translation().z() = height;
+
+         bc_->setDesiredFootState(
+          static_cast<int>(Side::RIGHT), target_foot_pose,
+          eVector3(0, 0, height_d),
+          eVector3(0, 0, height_dd),
+          eVector3(0, 0, 0),
+          eVector3(0, 0, 0));
     }
     else if (cs_.type(current_cs_) == -1){ // for ssp of Right support
+        ros::Time control_time_prev = control_time_ - ros::Duration((cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1)));
+        ros::Time control_time_half = control_time_prev + ros::Duration(  (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1))/2.0) ;
+
         if (cs_change_){
             ROS_INFO_STREAM("SSP with RIGHT SUPPORT PHASE");
             bc_->setStanceLegIDs({Side::RIGHT});
             bc_->setSwingLegIDs({Side::LEFT});
             bc_->setWeightDistribution(0.0);
-            cs_change_ = false;
-        }
-    }
-    else { // for final dsp
-        if (cs_change_){
-            ROS_INFO_STREAM("DSP to recover balance");
-            bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
-            bc_->setSwingLegIDs({});
 
-            ros::Time control_time_prev = initial_time_ + ros::Duration(cs_.end_time(current_cs_-1));
-            if (cs_.type(current_cs_-1) == -1)
-                force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {0.0, 0.5}, {0., 0.}, {0., 0.});
-            else
-                force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {1.0, 0.5}, {0., 0.}, {0., 0.});
+            initial_left_foot_pose_ = actual_left_foot_pose;
+            r_swing_traj1_.initialize({control_time_prev, control_time_half}, {actual_left_foot_pose.translation().z(), actual_left_foot_pose.translation().z() + 0.05}, {0., 0.}, {0., 0.});
+            r_swing_traj2_.initialize({control_time_half, control_time_}, {actual_left_foot_pose.translation().z()+0.05, actual_left_foot_pose.translation().z()}, {0., 0.}, {0., 0.});
             cs_change_ = false;
         }
-        force_distribution_interpolator_->query(internal_time_, weight_distribution, weight_distribution_d, weight_distribution_dd);
-        bc_->setWeightDistribution(weight_distribution);
+
+        double height, height_d, height_dd;
+        if (internal_time_ <= control_time_half){
+            r_swing_traj1_.query(internal_time_, height, height_d, height_dd);
+        }
+        else{
+            r_swing_traj2_.query(internal_time_, height, height_d, height_dd);
+        }
+
+        eMatrixHom target_foot_pose =  initial_left_foot_pose_;
+        target_foot_pose.translation().z() = height;
+
+         bc_->setDesiredFootState(
+          static_cast<int>(Side::LEFT), target_foot_pose,
+          eVector3(0, 0, height_d),
+          eVector3(0, 0, height_dd),
+          eVector3(0, 0, 0),
+          eVector3(0, 0, 0));
     }
+    // else { // for final dsp
+    //     if (cs_change_){
+    //         ROS_INFO_STREAM("DSP to recover balance");
+    //         bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
+    //         bc_->setSwingLegIDs({});
+
+    //         ros::Time control_time_prev = initial_time_ + ros::Duration(cs_.end_time(current_cs_-1));
+    //         if (cs_.type(current_cs_-1) == -1)
+    //             force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {0.0, 0.5}, {0., 0.}, {0., 0.});
+    //         else
+    //             force_distribution_interpolator_->initialize({control_time_prev, control_time_}, {1.0, 0.5}, {0., 0.}, {0., 0.});
+    //         cs_change_ = false;
+    //     }
+    //     force_distribution_interpolator_->query(internal_time_, weight_distribution, weight_distribution_d, weight_distribution_dd);
+    //     bc_->setWeightDistribution(weight_distribution);
+    // }
     targetCOM =  actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
     targetCOM_vel = com_traj_.vel.col(cnt_);
     cnt_++;
@@ -337,81 +393,6 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
   bc_->setDesiredBaseOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
   bc_->setDesiredTorsoOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
 
-  
-//     if (cs_.type(current_cs_) == 0){
-//       if (current_cs_ == 0){
-//         if (cs_change_){
-//             bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
-//             if (cs_.type(current_cs_+1) == -1)
-//                 force_distribution_interpolator_->initialize({ros::Time(), })
-//             cs_change_ = false;
-//         }
-//         if (cs_.type(current_cs_+1) == -1){
-//           bc_->setWeightDistribution(0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_))   );
-//         }
-//         else
-//           bc_->setWeightDistribution(1.0 - 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_))   );
-        
-//       }
-//       else{
-//         if (cs_.type(current_cs_+1) == -1)
-//          bc_->setWeightDistribution(0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )   );
-//         else
-//          bc_->setWeightDistribution(1.0 - 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )   );
-//       }
-//     } 
-//     else if (cs_.type(current_cs_) == 1){
-//       bc_->setStanceLegIDs({Side::LEFT});
-//       bc_->setSwingLegIDs({Side::RIGHT});
-//       bc_->setWeightDistribution(1.0);
-//     }
-//     else if (cs_.type(current_cs_) == -1){
-//       bc_->setStanceLegIDs({Side::RIGHT});
-//       bc_->setSwingLegIDs({Side::LEFT});
-//       bc_->setWeightDistribution(0.0);
-//     }
-//     else{
-//       bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
-
-//       if (cs_.type(current_cs_-1) == -1)
-//        bc_->setWeightDistribution(0.5 - 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )  );
-//       else
-//        bc_->setWeightDistribution(0.5 + 0.5 * (cs_.end_time(current_cs_) - cs_time ) / (cs_.end_time(current_cs_) - cs_.end_time(current_cs_-1) )  );
-//     }
-
-
-//     targetCOM =  actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-//     targetCOM_vel = com_traj_.vel.col(cnt_);
-//     cnt_ += 1;
-//   }
-//   else{
-//     targetCOM = actual_com_ + com_traj_.pos.col(cnt_) - com_traj_.pos.col(0);
-//     targetCOM_vel.setZero();
-//   }
-
-//   if (fabs((internal_time_ - control_time_).toSec()) < 1e-3){
-//     ROS_INFO_STREAM("Done");
-//   }
-
-
- 
- 
-//   eVector2 global_target_cop = targetCOM.head(2);
-
-//   control(bc_,
-//           rate_limiter_,
-//           targetCOM,
-//           targetCOM_vel,
-//           global_target_cop,
-//           parameters_.use_rate_limited_dcm_,
-//           targetCOP_rate_limited_unclamped_,
-//           targetCOP_unclamped_);
-
-//   bc_->setDesiredBaseOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
-//   bc_->setDesiredTorsoOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
-
-
-  
   internal_time_ += bc_->getControllerDt();
 
   return true;
