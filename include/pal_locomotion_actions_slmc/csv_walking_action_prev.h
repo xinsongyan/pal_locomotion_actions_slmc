@@ -3,7 +3,8 @@
 #define _CSV_WALKING_ACTION_PREV_
 
 #include <pal_locomotion/state_machine/walking_action_base.h>
-#include <pal_ros_utils/reference/pose/pose_reference_minjerk.h>
+//#include <pal_ros_utils/reference/pose/pose_reference_minjerk.h>
+#include <pal_ros_utils/reference/pose/pose_reference_minjerk_topic.h>
 //#include <pal_locomotion_actions_slmc/csv_utils.h>
 
 
@@ -83,8 +84,8 @@ public:
   Eigen::VectorXd std2eigen(const std::vector<double> std_vec);
 
 private:
-  bool configure_interpolator_;
-  bool initial_interpolation_;
+  bool lfoot_swing_trajec_generated;
+  bool rfoot_swing_trajec_generated;
 
   BController *bc_;
 
@@ -105,6 +106,8 @@ private:
     Eigen::MatrixXd support_end_times_;
     int num_of_phases_;
 
+    pal_robot_tools::PoseReferenceMinJerkTopicPtr lfoot_swing_interpolator_;
+    pal_robot_tools::PoseReferenceMinJerkTopicPtr rfoot_swing_interpolator_;
 
   // robot initial state
   eVector3 ini_com_pos_;

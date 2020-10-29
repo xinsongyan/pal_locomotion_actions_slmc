@@ -18,7 +18,7 @@ using namespace pal_robot_tools;
 namespace pal_locomotion
 {
 CSVWALKINGActionPrev::CSVWALKINGActionPrev()
-  : internal_time_(ros::Time(0)), configure_interpolator_(true), initial_interpolation_(true)
+  : internal_time_(ros::Time(0)), lfoot_swing_trajec_generated(false), rfoot_swing_trajec_generated(false)
 {
 
 }
@@ -34,6 +34,30 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
 
   rate_limiter_.reset(new HighPassRateLimiterVector2d(
       "dcm_rate_limiter", nh, bc_->getControllerDt(), parameters_.hpl_paramters_));
+
+    ini_com_pos_ = bc_->getActualCOMPosition();
+    ini_lf_pose_ = bc_->getActualFootPose(+Side::LEFT);
+    ini_rf_pose_ = bc_->getActualFootPose(+Side::RIGHT);
+    ROS_INFO_STREAM( "ini_com_pos_:" << ini_com_pos_);
+    ROS_INFO_STREAM( "ini_lf_pose_:" << ini_lf_pose_.translation());
+    ROS_INFO_STREAM( "ini_rf_pose_:" << ini_rf_pose_.translation());
+
+    lfoot_swing_interpolator_.reset(new PoseReferenceMinJerkTopic(
+                                        nh,
+                                        bc_->getControllerDt(),
+                                        "lfoot_swing_interpolator",
+                                        "odom",
+                                        "odom",
+                                        ini_lf_pose_));
+
+    rfoot_swing_interpolator_.reset(new PoseReferenceMinJerkTopic(
+                                        nh,
+                                        bc_->getControllerDt(),
+                                        "rfoot_swing_interpolator",
+                                        "odom",
+                                        "odom",
+                                        ini_rf_pose_));
+
 
     getTrajectoryFromRosParam(nh, "com", com_traj_);
 //    getTrajectoryFromRosParam(nh, "lfoot", lfoot_traj_);
@@ -194,6 +218,7 @@ bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
     ROS_INFO_STREAM( "ini_lf_pose_:" << ini_lf_pose_.translation());
     ROS_INFO_STREAM( "ini_rf_pose_:" << ini_rf_pose_.translation());
 
+
     dt_ = bc_->getControllerDt();
     ROS_INFO_STREAM( "dt_:" << dt_.toSec());
 
@@ -238,120 +263,94 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     ROS_INFO_STREAM( cur_phase_time);
 
     eVector3 targetCOM_pos, targetCOM_vel, targetCOM_acc;
+
     targetCOM_pos = ini_com_pos_ + com_traj_.pos.col(count) - com_traj_.pos.col(0);
     targetCOM_vel = com_traj_.vel.col(count);
     targetCOM_acc = com_traj_.acc.col(count);
+
+    double w = sqrt(bc_->getParameters()->gravity_ / bc_->getParameters()->z_height_);
+    eVector2 global_target_cop;
+    eVector2 global_target_dcm = targetCOM_pos.head(2) + targetCOM_vel.head(2) / w;
+    global_target_cop = global_target_dcm;
 
     bc_->setWeightDistribution(0.5);
     bc_->setActualSupportType(SupporType::DS);
     bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
     bc_->setSwingLegIDs({});
-    bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
-                             ini_lf_pose_,
-                             eVector3(0., 0., 0.),
-                             eVector3(0., 0., 0.),
-                             eVector3(0., 0., 0.),
-                             eVector3(0., 0., 0.));
 
-    bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-                             ini_rf_pose_,
-                             eVector3(0., 0., 0.),
-                             eVector3(0., 0., 0.),
-                             eVector3(0., 0., 0.),
-                             eVector3(0., 0., 0.));
+    if (cur_support_index == 0) // double support
+    {
+        bc_->setWeightDistribution(0.5);
+        bc_->setActualSupportType(SupporType::DS);
+        bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
+        bc_->setSwingLegIDs({});
 
-//    if (cur_support_index == 0) // double support
-//    {
-//        double w = 0.5;
-//        if (support_indexes_(cur_phase_index+1) == -1){
-//            double w = 0.5 - cur_phase_time/cur_phase_duration * 0.5;
-//            w = clamp(w,0.0,1.0);
-//            bc_->setWeightDistribution(w); // 0.5->0.0
-//        }
-//        if (support_indexes_(cur_phase_index+1) == 1){
-//            double w = 0.5 + cur_phase_time/cur_phase_duration * 0.5;
-//            w = clamp(w,0.0,1.0);
-//            bc_->setWeightDistribution(w); // 0.5->1.0
-//        }
-//        bc_->setWeightDistribution(w);
-//        bc_->setActualSupportType(SupporType::DS);
-//        bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
-//        bc_->setSwingLegIDs({});
-//        bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
-//                                 ini_lf_pose_,
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.));
-//
-//        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-//                                 ini_rf_pose_,
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.));
-//
-//
-//    }
-//    else if (cur_support_index == 1) // left support
-//    {
-//        bc_->setWeightDistribution(1.0);
-//        bc_->setActualSupportType(SupporType::SS);
-//        bc_->setStanceLegIDs({Side::LEFT});
-//        bc_->setSwingLegIDs({Side::RIGHT});
-//
-//
-//
-//        bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
-//                                 ini_lf_pose_,
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.));
-//
+    }
+    else if (cur_support_index == 1) // left support
+    {
+        if (!rfoot_swing_trajec_generated){
+            eMatrixHom target_foot_pose = ini_rf_pose_;
+            target_foot_pose.translation().z() = swing_height_;
+            rfoot_swing_interpolator_->setPoseTarget(target_foot_pose, ros::Duration(cur_phase_duration));
+            rfoot_swing_trajec_generated = true;
+            ROS_INFO_STREAM("rfoot_swing_trajec_generated!");
+        }
+
+        bc_->setWeightDistribution(1.0);
+        bc_->setActualSupportType(SupporType::SS);
+        bc_->setStanceLegIDs({Side::LEFT});
+        bc_->setSwingLegIDs({Side::RIGHT});
+
+//        global_target_cop = ini_lf_pose_.translation().head(2);
+
 //        SwingTrajectory3D swing_trajectory(ini_rf_pose_, ini_rf_pose_, cur_phase_duration, swing_height_);
 //        Eigen::Isometry3d target_pose = swing_trajectory.pose(cur_phase_time);
-//
-//        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-//                                 target_pose,
-//                                 swing_trajectory.vel(cur_phase_time),
-//                                 swing_trajectory.acc(cur_phase_time),
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.));
-//
-//    }
-//    else if (cur_support_index == -1) // right support
-//    {
-//        bc_->setWeightDistribution(0.0);
-//        bc_->setActualSupportType(SupporType::SS);
-//        bc_->setStanceLegIDs({Side::RIGHT});
-//        bc_->setSwingLegIDs({Side::LEFT});
-//
-//
+
+          //todo: time is not correct, interpolator is just for half
+        rfoot_swing_interpolator_->integrate(internal_time_, dt_);
+        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
+                                 rfoot_swing_interpolator_->getDesiredPose(),
+                                 rfoot_swing_interpolator_->getDesiredVelocity().first,
+                                 rfoot_swing_interpolator_->getDesiredAcceleration().first,
+                                 rfoot_swing_interpolator_->getDesiredVelocity().second,
+                                 rfoot_swing_interpolator_->getDesiredAcceleration().second);
+
+    }
+    else if (cur_support_index == -1) // right support
+    {
+        if (!lfoot_swing_trajec_generated){
+            eMatrixHom target_foot_pose = ini_lf_pose_;
+            target_foot_pose.translation().z() = swing_height_;
+            lfoot_swing_interpolator_->setPoseTarget(target_foot_pose, ros::Duration(cur_phase_duration));
+            lfoot_swing_trajec_generated = true;
+            ROS_INFO_STREAM("lfoot_swing_trajec_generated!");
+        }
+
+        bc_->setWeightDistribution(0.0);
+        bc_->setActualSupportType(SupporType::SS);
+        bc_->setStanceLegIDs({Side::RIGHT});
+        bc_->setSwingLegIDs({Side::LEFT});
+
+//        global_target_cop = ini_rf_pose_.translation().head(2);
+
 //        SwingTrajectory3D swing_trajectory(ini_lf_pose_, ini_lf_pose_, cur_phase_duration, swing_height_);
 //        Eigen::Isometry3d target_pose = swing_trajectory.pose(cur_phase_time);
-//
-//        bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
-//                                 target_pose,
-//                                 swing_trajectory.vel(cur_phase_time),
-//                                 swing_trajectory.acc(cur_phase_time),
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.));
-//
-//        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-//                                 ini_rf_pose_,
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.),
-//                                 eVector3(0., 0., 0.));
-//
-//    }
+
+          //todo: time is not correct, interpolator is just for half
+        lfoot_swing_interpolator_->integrate(internal_time_, dt_);
+        bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
+                                 lfoot_swing_interpolator_->getDesiredPose(),
+                                 lfoot_swing_interpolator_->getDesiredVelocity().first,
+                                 lfoot_swing_interpolator_->getDesiredAcceleration().first,
+                                 lfoot_swing_interpolator_->getDesiredVelocity().second,
+                                 lfoot_swing_interpolator_->getDesiredAcceleration().second);
+
+
+    }
 
 
 
-  double w = sqrt(bc_->getParameters()->gravity_ / bc_->getParameters()->z_height_);
-  eVector2 global_target_dcm = targetCOM_pos.head(2) + targetCOM_vel.head(2) / w;
-  eVector2 global_target_cop = global_target_dcm;
+
 
   control(bc_,
           rate_limiter_,
