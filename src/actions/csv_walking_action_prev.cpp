@@ -303,10 +303,27 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     targetCOM_vel = com_traj_.vel.col(cnt_);
     targetCOM_acc = com_traj_.acc.col(cnt_);
 
+    bc_->setWeightDistribution(0.5);
+    bc_->setActualSupportType(SupporType::DS);
+    bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
+    bc_->setSwingLegIDs({});
+    bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
+                             ini_lf_pose_,
+                             eVector3(0., 0., 0.),
+                             eVector3(0., 0., 0.),
+                             eVector3(0., 0., 0.),
+                             eVector3(0., 0., 0.));
 
+    bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
+                             ini_rf_pose_,
+                             eVector3(0., 0., 0.),
+                             eVector3(0., 0., 0.),
+                             eVector3(0., 0., 0.),
+                             eVector3(0., 0., 0.));
 
-    if (cur_support_index == 0) // double support
-    {
+//    if (cur_support_index == 0) // double support
+//    {
+//        double w = 0.5;
 //        if (support_indexes_(cur_phase_index+1) == -1){
 //            double w = 0.5 - cur_phase_time/cur_phase_duration * 0.5;
 //            w = clamp(w,0.0,1.0);
@@ -317,79 +334,79 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 //            w = clamp(w,0.0,1.0);
 //            bc_->setWeightDistribution(w); // 0.5->1.0
 //        }
-        bc_->setWeightDistribution(0.5);
-        bc_->setActualSupportType(SupporType::DS);
-        bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
-        bc_->setSwingLegIDs({});
-        bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
-                                 ini_lf_pose_,
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.));
-
-        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-                                 ini_rf_pose_,
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.));
-
-
-    }
-    else if (cur_support_index == 1) // left support
-    {
-        bc_->setWeightDistribution(1.0);
-        bc_->setActualSupportType(SupporType::SS);
-        bc_->setStanceLegIDs({Side::LEFT});
-        bc_->setSwingLegIDs({Side::RIGHT});
-
-
-
-        bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
-                                 ini_lf_pose_,
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.));
-
-        SwingTrajectory3D swing_trajectory(ini_rf_pose_, ini_rf_pose_, cur_phase_duration, swing_height_);
-        Eigen::Isometry3d target_pose = swing_trajectory.pose(cur_phase_time);
-
-        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-                                 target_pose,
-                                 swing_trajectory.vel(cur_phase_time),
-                                 swing_trajectory.acc(cur_phase_time),
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.));
-
-    }
-    else if (cur_support_index == -1) // right support
-    {
-        bc_->setWeightDistribution(0.0);
-        bc_->setActualSupportType(SupporType::SS);
-        bc_->setStanceLegIDs({Side::RIGHT});
-        bc_->setSwingLegIDs({Side::LEFT});
-
-
-        SwingTrajectory3D swing_trajectory(ini_lf_pose_, ini_lf_pose_, cur_phase_duration, swing_height_);
-        Eigen::Isometry3d target_pose = swing_trajectory.pose(cur_phase_time);
-
-        bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
-                                 target_pose,
-                                 swing_trajectory.vel(cur_phase_time),
-                                 swing_trajectory.acc(cur_phase_time),
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.));
-
-        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-                                 ini_rf_pose_,
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.),
-                                 eVector3(0., 0., 0.));
-
-    }
+//        bc_->setWeightDistribution(w);
+//        bc_->setActualSupportType(SupporType::DS);
+//        bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
+//        bc_->setSwingLegIDs({});
+//        bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
+//                                 ini_lf_pose_,
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.));
+//
+//        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
+//                                 ini_rf_pose_,
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.));
+//
+//
+//    }
+//    else if (cur_support_index == 1) // left support
+//    {
+//        bc_->setWeightDistribution(1.0);
+//        bc_->setActualSupportType(SupporType::SS);
+//        bc_->setStanceLegIDs({Side::LEFT});
+//        bc_->setSwingLegIDs({Side::RIGHT});
+//
+//
+//
+//        bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
+//                                 ini_lf_pose_,
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.));
+//
+//        SwingTrajectory3D swing_trajectory(ini_rf_pose_, ini_rf_pose_, cur_phase_duration, swing_height_);
+//        Eigen::Isometry3d target_pose = swing_trajectory.pose(cur_phase_time);
+//
+//        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
+//                                 target_pose,
+//                                 swing_trajectory.vel(cur_phase_time),
+//                                 swing_trajectory.acc(cur_phase_time),
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.));
+//
+//    }
+//    else if (cur_support_index == -1) // right support
+//    {
+//        bc_->setWeightDistribution(0.0);
+//        bc_->setActualSupportType(SupporType::SS);
+//        bc_->setStanceLegIDs({Side::RIGHT});
+//        bc_->setSwingLegIDs({Side::LEFT});
+//
+//
+//        SwingTrajectory3D swing_trajectory(ini_lf_pose_, ini_lf_pose_, cur_phase_duration, swing_height_);
+//        Eigen::Isometry3d target_pose = swing_trajectory.pose(cur_phase_time);
+//
+//        bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
+//                                 target_pose,
+//                                 swing_trajectory.vel(cur_phase_time),
+//                                 swing_trajectory.acc(cur_phase_time),
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.));
+//
+//        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
+//                                 ini_rf_pose_,
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.),
+//                                 eVector3(0., 0., 0.));
+//
+//    }
 
 
 
@@ -410,7 +427,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 //    bc_->setDesiredCOMPosition(targetCOM_pos);
 //    bc_->setDesiredCOMVelocity(targetCOM_vel);
 //    bc_->setDesiredCOMAcceleration(targetCOM_acc);
-
+//
 //    bc_->setDesiredICP(eVector3(targetCOM_pos.x(), targetCOM_pos.y(), 0.));
 //    bc_->setDesiredCOPReference(eVector3(targetCOM_pos.x(), targetCOM_pos.y(), 0.));
 //

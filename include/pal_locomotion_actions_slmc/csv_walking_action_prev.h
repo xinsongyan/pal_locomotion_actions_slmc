@@ -4,7 +4,7 @@
 
 #include <pal_locomotion/state_machine/walking_action_base.h>
 #include <pal_ros_utils/reference/pose/pose_reference_minjerk.h>
-#include <pal_locomotion_actions_slmc/csv_utils.h>
+//#include <pal_locomotion_actions_slmc/csv_utils.h>
 
 
 namespace pal_locomotion
