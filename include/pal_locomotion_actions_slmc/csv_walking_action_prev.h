@@ -82,41 +82,18 @@ public:
 
   Eigen::VectorXd std2eigen(const std::vector<double> std_vec);
 
-    double clamp(double d, double min, double max) {
-        const double t = d < min ? min : d;
-        return t > max ? max : t;
-    }
-
 private:
   bool configure_interpolator_;
   bool initial_interpolation_;
 
   BController *bc_;
-  SupporType support_type_;
 
   ros::Time internal_time_;
-
-  ros::Time control_time_;
-  ros::Time ds_time_;
-  ros::Time ss_time_;
-  ros::Time sss_time_;
-  ros::Time final_time_;
-
-
-  ros::Time begin_time_;
-  ros::Duration time_from_begin_;
-
-
-
-
-  int cnt_;
   ros::Duration dt_;
 
 
-
-
   CSVWALKINGActionPrevParameters parameters_;
-  eVector3 actual_com_;
+
   math_utils::HighPassRateLimiterVector2dPtr rate_limiter_;
   eVector2 targetCOP_rate_limited_unclamped_;
   eVector2 targetCOP_unclamped_;
@@ -129,11 +106,12 @@ private:
     int num_of_phases_;
 
 
+  // robot initial state
+  eVector3 ini_com_pos_;
+  eMatrixHom ini_lf_pose_, ini_rf_pose_;
 
-    eMatrixHom ini_lf_pose_, ini_rf_pose_;
-    eVector3 ini_com_pos_;
 
-    double swing_height_;
+  double swing_height_;
 
 };
 }
