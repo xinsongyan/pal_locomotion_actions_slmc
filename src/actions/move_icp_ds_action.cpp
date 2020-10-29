@@ -1,5 +1,5 @@
-#include <pal_locomotion_actions/move_icp_ds_action.h>
-#include <pal_locomotion_actions/icp_control_utils.h>
+#include <pal_locomotion_actions_slmc/move_icp_ds_action.h>
+#include <pal_locomotion_actions_slmc/icp_control_utils.h>
 #include <math_utils/geometry_tools.h>
 
 using namespace math_utils;

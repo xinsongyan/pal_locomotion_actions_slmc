@@ -1,4 +1,4 @@
-#include <pal_locomotion_actions_slmc/stand_one_leg_action.h>
+#include <pal_locomotion_actions_slmc/single_leg_stand_action.h>
 #include <pal_locomotion_actions_slmc/icp_control_utils.h>
 #include <math_utils/geometry_tools.h>
 
@@ -7,12 +7,12 @@ using namespace math_utils;
 
 namespace pal_locomotion
 {
-StandOneLegAction::StandOneLegAction()
+SingleLegStandAction::SingleLegStandAction()
   : internal_time_(ros::Time(0)), swing_leg_configured_(false), swing_leg_pose_index_(0)
 {
 }
 
-bool StandOneLegAction::configure(ros::NodeHandle &nh, BController *bc,
+bool SingleLegStandAction::configure(ros::NodeHandle &nh, BController *bc,
                                   const property_bag::PropertyBag &pb)
 {
   bc_ = bc;
@@ -69,11 +69,11 @@ bool StandOneLegAction::configure(ros::NodeHandle &nh, BController *bc,
   return true;
 }
 
-StandOneLegAction::~StandOneLegAction()
+SingleLegStandAction::~SingleLegStandAction()
 {
 }
 
-bool StandOneLegAction::enterHook(const ros::Time &time)
+bool SingleLegStandAction::enterHook(const ros::Time &time)
 {
   // Create interpolator for ICP from middle foot pose to target leg
   // Creat interpolator for ds force distribution weight
@@ -179,7 +179,7 @@ bool StandOneLegAction::enterHook(const ros::Time &time)
   return true;
 }
 
-bool StandOneLegAction::cycleHook(const ros::Time &time)
+bool SingleLegStandAction::cycleHook(const ros::Time &time)
 {
   eMatrixHom actual_left_foot_pose = bc_->getActualFootPose(+Side::LEFT);
   eMatrixHom actual_right_foot_pose = bc_->getActualFootPose(+Side::RIGHT);
@@ -374,7 +374,7 @@ bool StandOneLegAction::cycleHook(const ros::Time &time)
   return true;
 }
 
-bool StandOneLegAction::isOverHook(const ros::Time &time)
+bool SingleLegStandAction::isOverHook(const ros::Time &time)
 {
   if (bc_->getStateMachine()->queue_size() > 1)
   {
@@ -383,7 +383,7 @@ bool StandOneLegAction::isOverHook(const ros::Time &time)
   return false;
 }
 
-bool StandOneLegAction::endHook(const ros::Time &time)
+bool SingleLegStandAction::endHook(const ros::Time &time)
 {
   return true;
 }

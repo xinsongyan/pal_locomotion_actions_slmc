@@ -1,4 +1,5 @@
 <library path="lib/libpal_locomotion_actions_slmc_plugins">
+
   <class name="pal_locomotion::CSVCOMAction" type="pal_locomotion::CSVCOMAction" base_class_type="pal_locomotion::WalkingActionBase">
     <description>
     Action
@@ -16,5 +17,12 @@
     Action
   </description>
   </class>
+
+  <class name="pal_locomotion::SingleLegStandAction" type="pal_locomotion::SingleLegStandAction" base_class_type="pal_locomotion::WalkingActionBase">
+    <description>
+      Action
+    </description>
+  </class>
+
 </library>
 

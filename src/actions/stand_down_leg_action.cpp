@@ -1,5 +1,5 @@
-﻿#include <pal_locomotion_actions/stand_down_leg_action.h>
-#include <pal_locomotion_actions/icp_control_utils.h>
+﻿#include <pal_locomotion_actions_slmc/stand_down_leg_action.h>
+#include <pal_locomotion_actions_slmc/icp_control_utils.h>
 #include <math_utils/geometry_tools.h>
 
 using namespace pal_robot_tools;
