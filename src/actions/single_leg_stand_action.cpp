@@ -1,6 +1,7 @@
 #include <pal_locomotion_actions_slmc/single_leg_stand_action.h>
 #include <pal_locomotion_actions_slmc/icp_control_utils.h>
 #include <math_utils/geometry_tools.h>
+#include <tf/transform_listener.h>
 
 using namespace pal_robot_tools;
 using namespace math_utils;
@@ -24,36 +25,43 @@ bool SingleLegStandAction::configure(ros::NodeHandle &nh, BController *bc,
 
   force_distribution_interpolator_.reset(new MinJerkGenerator());
 
-  pb.getPropertyValue<double>("ds_duration", parameters_.ds_duration_,
-                              property_bag::RetrievalHandling::THROW);
+    Side side=Side::LEFT;
+    double ds_duration=1.0;
+    double swing_leg_up_time=1.0;
+    double swing_leg_height=0.1;
 
-  pb.getPropertyValue<std::vector<double>>("swing_leg_duration", parameters_.swing_leg_duration_,
-                                           property_bag::RetrievalHandling::THROW);
-  pb.getPropertyValue<std::vector<eQuaternion>>("target_swing_leg_orientation",
-                                                parameters_.target_swing_leg_orientation_,
-                                                property_bag::RetrievalHandling::THROW);
 
-  pb.getPropertyValue<std::vector<eVector3>>("target_swing_leg_position",
-                                             parameters_.target_swing_leg_position_,
-                                             property_bag::RetrievalHandling::THROW);
+    // Create swing leg target
+    eMatrixHom transform;
+    eMatrixHom relative_pose;
+    relative_pose =  createMatrix(eQuaternion::Identity(), eVector3(0., 0.0, swing_leg_height));
+    if (side == +Side::LEFT){
+        transform = bc_->getActualFootPose(+Side::RIGHT);
+    }
+    else{
+        transform = bc_->getActualFootPose(+Side::LEFT);
+    }
+    std::cerr << "Transform: " << std::endl << transform.matrix() << std::endl;
+    transform = transform * relative_pose;
 
-  std::string side_str;
-  pb.getPropertyValue<std::string>("side", side_str, property_bag::RetrievalHandling::THROW);
-  parameters_.side_ = Side::_from_string(side_str.c_str());
 
-  PAL_ASSERT_PERSIST_BIGGER(parameters_.swing_leg_duration_.size(), 0);
-  PAL_ASSERT_PERSIST_EQUAL(parameters_.swing_leg_duration_.size(),
-                           parameters_.target_swing_leg_position_.size());
-  PAL_ASSERT_PERSIST_EQUAL(parameters_.swing_leg_duration_.size(),
-                           parameters_.target_swing_leg_orientation_.size());
 
+
+    parameters_.side_ = side;
+    parameters_.ds_duration_ = ds_duration;
+    parameters_.swing_leg_duration_ = {swing_leg_up_time};
+    parameters_.target_swing_leg_orientation_ = {eQuaternion(transform.rotation())};
+    parameters_.target_swing_leg_position_ = {transform.translation()};
+
+
+// --------------------------------------------------------------
   if (parameters_.side_ == +Side::LEFT)
   {
-    eMatrixHom rf = bc_->getActualFootPose(+Side::LEFT);
+    eMatrixHom lf = bc_->getActualFootPose(+Side::LEFT);
 
     swing_leg_interpolator_.reset(new PoseReferenceMinJerkTopic(
         nh, bc_->getControllerDt(), "swing_leg_interpolator", "odom", "odom",
-        rf.inverse() * bc_->getActualFootPose(+Side::RIGHT)));
+        lf.inverse() * bc_->getActualFootPose(+Side::RIGHT)));
   }
   else
   {
