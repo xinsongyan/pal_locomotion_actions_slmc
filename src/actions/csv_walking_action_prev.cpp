@@ -220,18 +220,18 @@ bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
 {
     ROS_INFO_STREAM( "CSVWALKINGActionPrev::enterHook()");
 
-//  bc_->setHybridControlFactor("leg_left_1_joint", 1.);
-//  bc_->setHybridControlFactor("leg_left_2_joint", 1.);
-//  bc_->setHybridControlFactor("leg_left_3_joint", 1.);
-//  bc_->setHybridControlFactor("leg_left_4_joint", 1.);
-//  bc_->setHybridControlFactor("leg_left_5_joint", 1.);
-//  bc_->setHybridControlFactor("leg_left_6_joint", 1.);
-//  bc_->setHybridControlFactor("leg_right_1_joint", 1.);
-//  bc_->setHybridControlFactor("leg_right_2_joint", 1.);
-//  bc_->setHybridControlFactor("leg_right_3_joint", 1.);
-//  bc_->setHybridControlFactor("leg_right_4_joint", 1.);
-//  bc_->setHybridControlFactor("leg_right_5_joint", 1.);
-//  bc_->setHybridControlFactor("leg_right_6_joint", 1.);
+  bc_->setHybridControlFactor("leg_left_1_joint", 1.);
+  bc_->setHybridControlFactor("leg_left_2_joint", 1.);
+  bc_->setHybridControlFactor("leg_left_3_joint", 1.);
+  bc_->setHybridControlFactor("leg_left_4_joint", 1.);
+  bc_->setHybridControlFactor("leg_left_5_joint", 1.);
+  bc_->setHybridControlFactor("leg_left_6_joint", 1.);
+  bc_->setHybridControlFactor("leg_right_1_joint", 1.);
+  bc_->setHybridControlFactor("leg_right_2_joint", 1.);
+  bc_->setHybridControlFactor("leg_right_3_joint", 1.);
+  bc_->setHybridControlFactor("leg_right_4_joint", 1.);
+  bc_->setHybridControlFactor("leg_right_5_joint", 1.);
+  bc_->setHybridControlFactor("leg_right_6_joint", 1.);
 
 
     ini_com_pos_ = bc_->getActualCOMPosition();
@@ -305,24 +305,29 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     targetCOM_acc = com_traj_.acc.col(count);
 
 
+    double w = sqrt(bc_->getParameters()->gravity_ / bc_->getParameters()->z_height_);
+    eVector2 global_target_dcm = targetCOM_pos.head(2) + targetCOM_vel.head(2) / w;
+    global_target_cop = global_target_dcm;
+
+    control(bc_,
+            rate_limiter_,
+            targetCOM_pos,
+            targetCOM_vel,
+            global_target_cop,
+            parameters_.use_rate_limited_dcm_,
+            targetCOP_rate_limited_unclamped_,
+            targetCOP_unclamped_);
 
 
 
     if (cur_support_index == 0) // double support
     {
 
-        double w = sqrt(bc_->getParameters()->gravity_ / bc_->getParameters()->z_height_);
-        eVector2 global_target_dcm = targetCOM_pos.head(2) + targetCOM_vel.head(2) / w;
-        global_target_cop = global_target_dcm;
-
-        control(bc_,
-                rate_limiter_,
-                targetCOM_pos,
-                targetCOM_vel,
-                global_target_cop,
-                parameters_.use_rate_limited_dcm_,
-                targetCOP_rate_limited_unclamped_,
-                targetCOP_unclamped_);
+//        bc_->setDesiredCOMPosition(targetCOM_pos);
+//        bc_->setDesiredCOMVelocity(targetCOM_vel);
+//        bc_->setDesiredCOMAcceleration(targetCOM_acc);
+//        bc_->setDesiredCOPReference(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
+//        bc_->setDesiredCOPComputed(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
 
         bc_->setWeightDistribution(0.5);
         bc_->setActualSupportType(SupporType::DS);
@@ -332,15 +337,13 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     }
     else if (cur_support_index == 1) // left support
     {
-        global_target_cop = ini_lf_pose_.translation().head(2);
-        control(bc_,
-                rate_limiter_,
-                targetCOM_pos,
-                targetCOM_vel,
-                global_target_cop,
-                parameters_.use_rate_limited_dcm_,
-                targetCOP_rate_limited_unclamped_,
-                targetCOP_unclamped_);
+//        global_target_cop = ini_lf_pose_.translation().head(2);
+//        bc_->setDesiredCOMPosition(targetCOM_pos);
+//        bc_->setDesiredCOMVelocity(targetCOM_vel);
+//        bc_->setDesiredCOMAcceleration(targetCOM_acc);
+//        bc_->setDesiredCOPReference(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
+//        bc_->setDesiredCOPComputed(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
+
 
         bc_->setWeightDistribution(1.0);
         bc_->setActualSupportType(SupporType::SS);
@@ -393,15 +396,14 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     else if (cur_support_index == -1) // right support
     {
 
-        global_target_cop = ini_rf_pose_.translation().head(2);
-        control(bc_,
-                rate_limiter_,
-                targetCOM_pos,
-                targetCOM_vel,
-                global_target_cop,
-                parameters_.use_rate_limited_dcm_,
-                targetCOP_rate_limited_unclamped_,
-                targetCOP_unclamped_);
+
+//        global_target_cop = ini_rf_pose_.translation().head(2);
+//        bc_->setDesiredCOMPosition(targetCOM_pos);
+//        bc_->setDesiredCOMVelocity(targetCOM_vel);
+//        bc_->setDesiredCOMAcceleration(targetCOM_acc);
+//        bc_->setDesiredCOPReference(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
+//        bc_->setDesiredCOPComputed(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
+
 
         bc_->setWeightDistribution(0.0);
         bc_->setActualSupportType(SupporType::SS);
