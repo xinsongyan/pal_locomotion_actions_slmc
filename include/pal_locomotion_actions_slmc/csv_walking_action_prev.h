@@ -3,10 +3,11 @@
 #define _CSV_WALKING_ACTION_PREV_
 
 #include <pal_locomotion/state_machine/walking_action_base.h>
-//#include <pal_ros_utils/reference/pose/pose_reference_minjerk.h>
+#include <pal_ros_utils/reference/pose/pose_reference_minjerk.h>
 #include <pal_ros_utils/reference/pose/pose_reference_minjerk_topic.h>
 //#include <pal_locomotion_actions_slmc/csv_utils.h>
 
+#include <pal_locomotion_actions_slmc/swing_trajectory.h>
 
 namespace pal_locomotion
 {
@@ -84,8 +85,7 @@ public:
   Eigen::VectorXd std2eigen(const std::vector<double> std_vec);
 
 private:
-  bool lfoot_swing_trajec_generated;
-  bool rfoot_swing_trajec_generated;
+
 
   BController *bc_;
 
@@ -106,8 +106,17 @@ private:
     Eigen::MatrixXd support_end_times_;
     int num_of_phases_;
 
-    pal_robot_tools::PoseReferenceMinJerkTopicPtr lfoot_swing_interpolator_;
-    pal_robot_tools::PoseReferenceMinJerkTopicPtr rfoot_swing_interpolator_;
+    pal_robot_tools::PoseReferenceMinJerkTopicPtr lfoot_swing_up_interpolator_;
+    pal_robot_tools::PoseReferenceMinJerkTopicPtr lfoot_swing_down_interpolator_;
+    pal_robot_tools::PoseReferenceMinJerkTopicPtr rfoot_swing_up_interpolator_;
+    pal_robot_tools::PoseReferenceMinJerkTopicPtr rfoot_swing_down_interpolator_;
+    bool lfoot_swing_up_trajec_generated;
+    bool lfoot_swing_down_trajec_generated;
+    bool rfoot_swing_up_trajec_generated;
+    bool rfoot_swing_down_trajec_generated;
+
+    SwingTrajectory3D lfoot_swing_trajectory_;
+    SwingTrajectory3D rfoot_swing_trajectory_;
 
   // robot initial state
   eVector3 ini_com_pos_;
@@ -115,6 +124,9 @@ private:
 
 
   double swing_height_;
+
+  int pre_phase_index_;
+
 
 };
 }

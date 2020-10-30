@@ -75,6 +75,8 @@ private:
 
 
 public:
+    SwingTrajectory3D(){};
+
     SwingTrajectory3D(const Eigen::Vector3d ini_pos, const Eigen::Vector3d fin_pos, const double swing_duration, const double swing_height, const Eigen::Vector3d ini_vel=Eigen::Vector3d(0,0,0), const Eigen::Vector3d fin_vel=Eigen::Vector3d(0,0,0)){
         ini_pos_ = ini_pos;
         fin_pos_ = fin_pos;

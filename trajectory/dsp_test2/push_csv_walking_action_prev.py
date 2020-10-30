@@ -51,7 +51,7 @@ def push_trajectory_to_ros_param_server():
 
 
 
-def call_com_tracking_action():
+def push_csv_walking_action_prev():
 
     from pal_locomotion_msgs.srv import PushActions, PushActionsRequest
     from pal_locomotion_msgs.msg import ActionWithParameters
@@ -79,8 +79,7 @@ def main():
     launch_talos_gazebo()
     launch_talos_dcm_walking_controller()
     publish_all()
-
-    call_com_tracking_action()
+    push_csv_walking_action_prev()
     while True:
         pass
 
