@@ -35,15 +35,32 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
 {
   bc_ = bController;
 
-  rate_limiter_.reset(new HighPassRateLimiterVector2d(
+
+    dt_ = bc_->getControllerDt();
+    ROS_INFO_STREAM( "dt_:" << dt_.toSec());
+
+    swing_height_ = 0.05;
+    ROS_INFO_STREAM( "swing_height_:" << swing_height_);
+
+    getTrajectoryFromRosParam(nh, "com", com_traj_);
+//    getTrajectoryFromRosParam(nh, "lfoot", lfoot_traj_);
+//    getTrajectoryFromRosParam(nh, "rfoot", rfoot_traj_);
+    getZmpTrajectoryFromRosParam(nh);
+
+
+    rate_limiter_.reset(new HighPassRateLimiterVector2d(
       "dcm_rate_limiter", nh, bc_->getControllerDt(), parameters_.hpl_paramters_));
 
     ini_com_pos_ = bc_->getActualCOMPosition();
     ini_lf_pose_ = bc_->getActualFootPose(+Side::LEFT);
     ini_rf_pose_ = bc_->getActualFootPose(+Side::RIGHT);
-    ROS_INFO_STREAM( "ini_com_pos_:" << ini_com_pos_);
-    ROS_INFO_STREAM( "ini_lf_pose_:" << ini_lf_pose_.translation());
-    ROS_INFO_STREAM( "ini_rf_pose_:" << ini_rf_pose_.translation());
+    ini_local_pose_ = interpolateBetweenTransforms(ini_lf_pose_, ini_rf_pose_);
+    ROS_INFO_STREAM( "ini_com_pos_:" << ini_com_pos_.transpose());
+    ROS_INFO_STREAM( "ini_lf_pose_:" << ini_lf_pose_.translation().transpose());
+    ROS_INFO_STREAM( "ini_rf_pose_:" << ini_rf_pose_.translation().transpose());
+    ROS_INFO_STREAM( "ini_local_pose_:" << ini_local_pose_.translation());
+
+
 
     lfoot_swing_up_interpolator_.reset(new PoseReferenceMinJerkTopic(
                                         nh,
@@ -81,11 +98,54 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
                                         "odom",
                                         rfoot_swing_down_ini_pose));
 
-    getTrajectoryFromRosParam(nh, "com", com_traj_);
-//    getTrajectoryFromRosParam(nh, "lfoot", lfoot_traj_);
-//    getTrajectoryFromRosParam(nh, "rfoot", rfoot_traj_);
 
-  return true;
+
+
+    return true;
+}
+
+bool CSVWALKINGActionPrev::getZmpTrajectoryFromRosParam(const ros::NodeHandle &nh){
+    std::string key;
+    key = "/zmp_trajectory/t";
+    std::vector<double> std_zmp_t;
+    if (nh.getParam(key, std_zmp_t)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+    Eigen::MatrixXd eigen_zmp_t = Eigen::Map<Eigen::VectorXd>(std_zmp_t.data(), std_zmp_t.size());
+
+    key = "/zmp_trajectory/x";
+    std::vector<double> std_zmp_x;
+    if (nh.getParam(key, std_zmp_x)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+    Eigen::MatrixXd eigen_zmp_x = Eigen::Map<Eigen::VectorXd>(std_zmp_x.data(), std_zmp_x.size());
+
+    key = "/zmp_trajectory/y";
+    std::vector<double> std_zmp_y;
+    if (nh.getParam(key, std_zmp_y)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+    Eigen::MatrixXd eigen_zmp_y = Eigen::Map<Eigen::VectorXd>(std_zmp_y.data(), std_zmp_y.size());
+
+    key = "/zmp_trajectory/z";
+    std::vector<double> std_zmp_z;
+    if (nh.getParam(key, std_zmp_z)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+    Eigen::MatrixXd eigen_zmp_z = Eigen::Map<Eigen::VectorXd>(std_zmp_z.data(), std_zmp_z.size());
+
+    zmp_t_ = eigen_zmp_t;
+    zmp_x_ = eigen_zmp_x;
+    zmp_y_ = eigen_zmp_y;
+    zmp_z_ = eigen_zmp_z;
 }
 
 bool CSVWALKINGActionPrev::getTrajectoryFromRosParam(const ros::NodeHandle &nh, const std::string & name, Trajectory & traj){
@@ -234,19 +294,7 @@ bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
   bc_->setHybridControlFactor("leg_right_6_joint", 1.);
 
 
-    ini_com_pos_ = bc_->getActualCOMPosition();
-    ini_lf_pose_ = bc_->getActualFootPose(+Side::LEFT);
-    ini_rf_pose_ = bc_->getActualFootPose(+Side::RIGHT);
-    ROS_INFO_STREAM( "ini_com_pos_:" << ini_com_pos_.transpose());
-    ROS_INFO_STREAM( "ini_lf_pose_:" << ini_lf_pose_.translation().transpose());
-    ROS_INFO_STREAM( "ini_rf_pose_:" << ini_rf_pose_.translation().transpose());
 
-
-    dt_ = bc_->getControllerDt();
-    ROS_INFO_STREAM( "dt_:" << dt_.toSec());
-
-    swing_height_ = 0.05;
-    ROS_INFO_STREAM( "swing_height_:" << swing_height_);
 
 
   return true;
@@ -290,17 +338,13 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 
 
 
-    if (cur_phase_index != pre_phase_index_)
-    {
-        ROS_INFO_STREAM("phase switching!");
-        ROS_INFO_STREAM( "internal_time_.toSec():" << internal_time_.toSec());
-        ROS_INFO_STREAM( "count:" << count);
-    }
-    pre_phase_index_ = cur_phase_index;
+
+
 
     eVector3 targetCOM_pos, targetCOM_vel, targetCOM_acc;
     eVector2 global_target_cop;
     targetCOM_pos = ini_com_pos_ + com_traj_.pos.col(count) - com_traj_.pos.col(0);
+    targetCOM_pos(2) = ini_local_pose_.translation().z() + bc_->getParameters()->z_height_;
     targetCOM_vel = com_traj_.vel.col(count);
     targetCOM_acc = com_traj_.acc.col(count);
 
@@ -308,7 +352,9 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     double w = sqrt(bc_->getParameters()->gravity_ / bc_->getParameters()->z_height_);
     eVector2 global_target_dcm = targetCOM_pos.head(2) + targetCOM_vel.head(2) / w;
     global_target_cop = global_target_dcm;
+//    global_target_cop = eVector2(zmp_x_(count), zmp_y_(count));
 
+    ROS_INFO_STREAM("control() begin!");
     control(bc_,
             rate_limiter_,
             targetCOM_pos,
@@ -317,6 +363,14 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
             parameters_.use_rate_limited_dcm_,
             targetCOP_rate_limited_unclamped_,
             targetCOP_unclamped_);
+    ROS_INFO_STREAM("control() end!");
+
+//        bc_->setDesiredCOMPosition(targetCOM_pos);
+//        bc_->setDesiredCOMVelocity(targetCOM_vel);
+//        bc_->setDesiredCOMAcceleration(targetCOM_acc);
+//        bc_->setDesiredICP(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
+//        bc_->setDesiredCOPReference(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
+//        bc_->setDesiredCOPComputed(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
 
 
 
@@ -333,6 +387,10 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
         bc_->setActualSupportType(SupporType::DS);
         bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
         bc_->setSwingLegIDs({});
+
+
+
+
 
     }
     else if (cur_support_index == 1) // left support
@@ -355,7 +413,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
             target_foot_pose.translation().z() = swing_height_;
             rfoot_swing_up_interpolator_->setPoseTarget(target_foot_pose, ros::Duration(cur_phase_duration/2.0));
             rfoot_swing_down_interpolator_->setPoseTarget(ini_rf_pose_, ros::Duration(cur_phase_duration/2.0));
-//            rfoot_swing_trajectory_ = SwingTrajectory3D(ini_rf_pose_, ini_rf_pose_, cur_phase_duration, swing_height_);
+            rfoot_swing_trajectory_ = SwingTrajectory3D(ini_rf_pose_, ini_rf_pose_, cur_phase_duration, swing_height_);
             rfoot_swing_up_trajec_generated = true;
             ROS_INFO_STREAM("rfoot_swing_up_trajec_generated!");
             ROS_INFO_STREAM("rfoot_swing_down_trajec_generated!");
@@ -364,32 +422,39 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
         }
 
 
-        if (cur_phase_time<cur_phase_duration/2.0){/// swing up
-            rfoot_swing_up_interpolator_->integrate(internal_time_, dt_);
-            bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-                                     rfoot_swing_up_interpolator_->getDesiredPose(),
-                                     rfoot_swing_up_interpolator_->getDesiredVelocity().first,
-                                     rfoot_swing_up_interpolator_->getDesiredAcceleration().first,
-                                     rfoot_swing_up_interpolator_->getDesiredVelocity().second,
-                                     rfoot_swing_up_interpolator_->getDesiredAcceleration().second);
-        }
-        else{/// swing down
-            rfoot_swing_down_interpolator_->integrate(internal_time_, dt_);
-            bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-                                     rfoot_swing_down_interpolator_->getDesiredPose(),
-                                     rfoot_swing_down_interpolator_->getDesiredVelocity().first,
-                                     rfoot_swing_down_interpolator_->getDesiredAcceleration().first,
-                                     rfoot_swing_down_interpolator_->getDesiredVelocity().second,
-                                     rfoot_swing_down_interpolator_->getDesiredAcceleration().second);
-        }
+//        if (cur_phase_time<cur_phase_duration/2.0){/// swing up
+//            rfoot_swing_up_interpolator_->integrate(internal_time_, dt_);
+//            bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
+//                                     rfoot_swing_trajectory_.pose(cur_phase_time),
+//                                     rfoot_swing_up_interpolator_->getDesiredVelocity().first,
+//                                     rfoot_swing_up_interpolator_->getDesiredAcceleration().first,
+//                                     rfoot_swing_up_interpolator_->getDesiredVelocity().second,
+//                                     rfoot_swing_up_interpolator_->getDesiredAcceleration().second);
+//            ROS_INFO_STREAM("rfoot_swing_up_interpolator_->getDesiredPose().translation():"<< rfoot_swing_up_interpolator_->getDesiredPose().translation().transpose());
+//            ROS_INFO_STREAM("rfoot_swing_trajectory_.pos(cur_phase_time):"<< rfoot_swing_trajectory_.pos(cur_phase_time).transpose());
+//
+////            ROS_INFO_STREAM("rfoot_swing_up_interpolator_->getDesiredPose().rotation():"<< rfoot_swing_up_interpolator_->getDesiredPose().rotation());
+////            ROS_INFO_STREAM("rfoot_swing_trajectory_.pos(cur_phase_time):"<< rfoot_swing_trajectory_.rot(cur_phase_time));
+//        }
+//        else{/// swing down
+//            rfoot_swing_down_interpolator_->integrate(internal_time_, dt_);
+//            bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
+//                                     rfoot_swing_trajectory_.pose(cur_phase_time),
+//                                     rfoot_swing_down_interpolator_->getDesiredVelocity().first,
+//                                     rfoot_swing_down_interpolator_->getDesiredAcceleration().first,
+//                                     rfoot_swing_down_interpolator_->getDesiredVelocity().second,
+//                                     rfoot_swing_down_interpolator_->getDesiredAcceleration().second);
+//        }
 
-//        // use rfoot_swing_trajectory_
-//        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-//                                 rfoot_swing_trajectory_.pose(cur_phase_time),
-//                                 rfoot_swing_trajectory_.vel(cur_phase_time),
-//                                 rfoot_swing_trajectory_.acc(cur_phase_time),
-//                                 eVector3(0,0,0),
-//                                 eVector3(0,0,0));
+//         use rfoot_swing_trajectory_
+        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
+                                 rfoot_swing_trajectory_.pose(cur_phase_time),
+                                 rfoot_swing_trajectory_.vel(cur_phase_time),
+                                 rfoot_swing_trajectory_.acc(cur_phase_time),
+                                 eVector3(0,0,0),
+                                 eVector3(0,0,0));
+
+
 
 
     }
@@ -416,7 +481,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
             target_foot_pose.translation().z() = swing_height_;
             lfoot_swing_up_interpolator_->setPoseTarget(target_foot_pose, ros::Duration(cur_phase_duration/2.0));
             lfoot_swing_down_interpolator_->setPoseTarget(ini_lf_pose_, ros::Duration(cur_phase_duration/2.0));
-//            lfoot_swing_trajectory_ = SwingTrajectory3D(ini_lf_pose_, ini_lf_pose_, cur_phase_duration, swing_height_);
+            lfoot_swing_trajectory_ = SwingTrajectory3D(ini_lf_pose_, ini_lf_pose_, cur_phase_duration, swing_height_);
             lfoot_swing_up_trajec_generated = true;
             ROS_INFO_STREAM("lfoot_swing_up_trajec_generated!");
             ROS_INFO_STREAM("lfoot_swing_down_trajec_generated!");
@@ -428,31 +493,38 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 
         if (cur_phase_time<cur_phase_duration/2.0){/// swing up
             lfoot_swing_up_interpolator_->integrate(internal_time_, dt_);
-            bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
-                                     lfoot_swing_up_interpolator_->getDesiredPose(),
-                                     lfoot_swing_up_interpolator_->getDesiredVelocity().first,
-                                     lfoot_swing_up_interpolator_->getDesiredAcceleration().first,
-                                     lfoot_swing_up_interpolator_->getDesiredVelocity().second,
-                                     lfoot_swing_up_interpolator_->getDesiredAcceleration().second);
+//            bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
+//                                     lfoot_swing_up_interpolator_->getDesiredPose(),
+//                                     lfoot_swing_up_interpolator_->getDesiredVelocity().first,
+//                                     lfoot_swing_up_interpolator_->getDesiredAcceleration().first,
+//                                     lfoot_swing_up_interpolator_->getDesiredVelocity().second,
+//                                     lfoot_swing_up_interpolator_->getDesiredAcceleration().second);
+
+
+
+//            ROS_INFO_STREAM("lfoot_swing_up_interpolator_->getDesiredPose().translation():"<< lfoot_swing_up_interpolator_->getDesiredPose().translation().transpose());
+//            ROS_INFO_STREAM("lfoot_swing_trajectory_.pos(cur_phase_time):"<< lfoot_swing_trajectory_.pos(cur_phase_time).transpose());
         }
         else{/// swing down
             lfoot_swing_down_interpolator_->integrate(internal_time_, dt_);
-            bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
-                                     lfoot_swing_down_interpolator_->getDesiredPose(),
-                                     lfoot_swing_down_interpolator_->getDesiredVelocity().first,
-                                     lfoot_swing_down_interpolator_->getDesiredAcceleration().first,
-                                     lfoot_swing_down_interpolator_->getDesiredVelocity().second,
-                                     lfoot_swing_down_interpolator_->getDesiredAcceleration().second);
+//            bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
+//                                     lfoot_swing_trajectory_.pose(cur_phase_time),
+//                                     lfoot_swing_down_interpolator_->getDesiredVelocity().first,
+//                                     lfoot_swing_down_interpolator_->getDesiredAcceleration().first,
+//                                     lfoot_swing_down_interpolator_->getDesiredVelocity().second,
+//                                     lfoot_swing_down_interpolator_->getDesiredAcceleration().second);
         }
 
 
-//        // use lfoot_swing_trajectory_
-//        bc_->setDesiredFootState(static_cast<int>(+Side::RIGHT),
-//                                 lfoot_swing_trajectory_.pose(cur_phase_time),
-//                                 lfoot_swing_trajectory_.vel(cur_phase_time),
-//                                 lfoot_swing_trajectory_.acc(cur_phase_time),
-//                                 eVector3(0,0,0),
-//                                 eVector3(0,0,0));
+        // use lfoot_swing_trajectory_
+        bc_->setDesiredFootState(static_cast<int>(+Side::LEFT),
+                                 lfoot_swing_trajectory_.pose(cur_phase_time),
+                                 lfoot_swing_trajectory_.vel(cur_phase_time),
+                                 lfoot_swing_trajectory_.acc(cur_phase_time),
+                                 eVector3(0,0,0),
+                                 eVector3(0,0,0));
+
+
 
     }
 

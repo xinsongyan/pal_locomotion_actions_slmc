@@ -82,6 +82,8 @@ public:
 
   bool getTrajectoryFromRosParam(const ros::NodeHandle &nh, const std::string & name, Trajectory & traj);
 
+  bool getZmpTrajectoryFromRosParam(const ros::NodeHandle &nh);
+
   Eigen::VectorXd std2eigen(const std::vector<double> std_vec);
 
 private:
@@ -101,6 +103,10 @@ private:
 
   // trajectory
     Trajectory com_traj_;
+    Eigen::VectorXd zmp_t_;
+    Eigen::VectorXd zmp_x_;
+    Eigen::VectorXd zmp_y_;
+    Eigen::VectorXd zmp_z_;
     Eigen::MatrixXd support_durations_;
     Eigen::MatrixXd support_indexes_;
     Eigen::MatrixXd support_end_times_;
@@ -121,7 +127,7 @@ private:
   // robot initial state
   eVector3 ini_com_pos_;
   eMatrixHom ini_lf_pose_, ini_rf_pose_;
-
+  eMatrixHom ini_local_pose_;
 
   double swing_height_;
 
