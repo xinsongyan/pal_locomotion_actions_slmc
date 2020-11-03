@@ -242,7 +242,7 @@ bool StandOneLegAction::cycleHook(const ros::Time &time)
     eVector3 targetCOM_vel;
     targetCOM_vel << global_target_dcm_vel.x(), global_target_dcm_vel.y(), desired_heigh_vel;
 
-    control(bc_, rate_limiter_, targetCOM, targetCOM_vel, global_target_cop,
+    icp_control(bc_, rate_limiter_, targetCOM, targetCOM_vel, global_target_cop,
             parameters_.use_rate_limited_dcm_, targetCOP_rate_limited_unclamped_,
             targetCOP_unclamped_);
 
@@ -359,7 +359,7 @@ bool StandOneLegAction::cycleHook(const ros::Time &time)
     eVector3 targetCOM_vel;
     targetCOM_vel << 0.0, 0.0, desired_heigh_vel;
 
-    control(bc_, rate_limiter_, targetCOM, targetCOM_vel,
+    icp_control(bc_, rate_limiter_, targetCOM, targetCOM_vel,
             local_coordinate_frame.translation().segment(0, 2), parameters_.use_rate_limited_dcm_,
             targetCOP_rate_limited_unclamped_, targetCOP_unclamped_);
 

@@ -4,21 +4,21 @@
 
 namespace pal_locomotion
 {
-void control(BController *bc, const math_utils::HighPassRateLimiterVector2dPtr &rate_limiter,
+void icp_control(BController *bc, const math_utils::HighPassRateLimiterVector2dPtr &rate_limiter,
              const eVector3 &targetDCM, const eVector3 &targetDCM_vel,
              const eVector2 &referenceCOP, const bool use_rate_limited_dcm,
              eVector2 &targetCOP_rate_limited_unclamped, eVector2 &targetCOP_unclamped)
-{
-  control(bc, rate_limiter, targetDCM, targetDCM_vel, referenceCOP, use_rate_limited_dcm,
+{ROS_INFO_STREAM("control 1 ");
+  icp_control(bc, rate_limiter, targetDCM, targetDCM_vel, referenceCOP, use_rate_limited_dcm,
           bc->getActualCOMPosition(), bc->getActualCOMVelocity2d(),
           targetCOP_rate_limited_unclamped, targetCOP_unclamped);
 }
-void control(BController *bc, const math_utils::HighPassRateLimiterVector2dPtr &rate_limiter,
+void icp_control(BController *bc, const math_utils::HighPassRateLimiterVector2dPtr &rate_limiter,
              const eVector3 &targetDCM, const eVector3 &targetDCM_vel,
              const eVector2 &referenceCOP, const bool use_rate_limited_dcm,
              const eVector3 &actualCOM, const eVector2 &actualCOM_vel,
              eVector2 &targetCOP_rate_limited_unclamped, eVector2 &targetCOP_unclamped)
-{
+{ROS_INFO_STREAM("control 2 ");
   Eigen::Vector2d actualCOM_2d(actualCOM.x(), actualCOM.y());
   Eigen::Vector2d actualCOM_vel_2d(actualCOM_vel.x(), actualCOM_vel.y());
 

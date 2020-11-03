@@ -381,7 +381,7 @@ bool CSVWALKINGAction::cycleHook(const ros::Time &time)
  
   eVector2 global_target_cop = targetCOM.head(2);
 
-  control(bc_,
+  icp_control(bc_,
           rate_limiter_,
           targetCOM,
           targetCOM_vel,

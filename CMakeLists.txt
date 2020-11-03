@@ -22,7 +22,7 @@ include_directories(
 add_subdirectory(src/actions)
 add_subdirectory(src/nodes)
 
-add_library(${PROJECT_NAME} #src/icp_control_utils.cpp
+add_library(${PROJECT_NAME} src/icp_control_utils.cpp
                             ${SRC})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 

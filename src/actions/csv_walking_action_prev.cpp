@@ -354,8 +354,8 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     global_target_cop = global_target_dcm;
 //    global_target_cop = eVector2(zmp_x_(count), zmp_y_(count));
 
-    ROS_INFO_STREAM("control() begin!");
-    control(bc_,
+    ROS_INFO_STREAM("control() begin222!");
+    icp_control(bc_,
             rate_limiter_,
             targetCOM_pos,
             targetCOM_vel,
@@ -363,7 +363,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
             parameters_.use_rate_limited_dcm_,
             targetCOP_rate_limited_unclamped_,
             targetCOP_unclamped_);
-    ROS_INFO_STREAM("control() end!");
+    ROS_INFO_STREAM("control() end222!");
 
 //        bc_->setDesiredCOMPosition(targetCOM_pos);
 //        bc_->setDesiredCOMVelocity(targetCOM_vel);

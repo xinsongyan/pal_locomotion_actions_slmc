@@ -13,12 +13,12 @@
 
 namespace pal_locomotion
 {
-void control(BController *bc, const math_utils::HighPassRateLimiterVector2dPtr &rate_limiter,
+void icp_control(BController *bc, const math_utils::HighPassRateLimiterVector2dPtr &rate_limiter,
              const eVector3 &targetDCM, const eVector3 &targetDCM_vel,
              const eVector2 &referenceCOP, const bool use_rate_limited_dcm,
              eVector2 &targetCOP_rate_limited_unclamped, eVector2 &targetCOP_unclamped);
 
-void control(BController *bc, const math_utils::HighPassRateLimiterVector2dPtr &rate_limiter,
+void icp_control(BController *bc, const math_utils::HighPassRateLimiterVector2dPtr &rate_limiter,
              const eVector3 &targetDCM, const eVector3 &targetDCM_vel,
              const eVector2 &referenceCOP, const bool use_rate_limited_dcm_,
              const eVector3 &actualCOM, const eVector2 &actualCOM_vel,
