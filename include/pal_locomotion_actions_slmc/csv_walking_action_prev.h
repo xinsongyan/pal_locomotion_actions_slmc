@@ -112,14 +112,9 @@ private:
     Eigen::MatrixXd support_end_times_;
     int num_of_phases_;
 
-    pal_robot_tools::PoseReferenceMinJerkTopicPtr lfoot_swing_up_interpolator_;
-    pal_robot_tools::PoseReferenceMinJerkTopicPtr lfoot_swing_down_interpolator_;
-    pal_robot_tools::PoseReferenceMinJerkTopicPtr rfoot_swing_up_interpolator_;
-    pal_robot_tools::PoseReferenceMinJerkTopicPtr rfoot_swing_down_interpolator_;
-    bool lfoot_swing_up_trajec_generated;
-    bool lfoot_swing_down_trajec_generated;
-    bool rfoot_swing_up_trajec_generated;
-    bool rfoot_swing_down_trajec_generated;
+
+    bool lfoot_swing_trajec_generated;
+    bool rfoot_swing_trajec_generated;
 
     SwingTrajectory3D lfoot_swing_trajectory_;
     SwingTrajectory3D rfoot_swing_trajectory_;
