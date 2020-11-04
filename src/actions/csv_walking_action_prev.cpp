@@ -233,18 +233,18 @@ bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
 {
     ROS_INFO_STREAM( "CSVWALKINGActionPrev::enterHook()");
 
-  bc_->setHybridControlFactor("leg_left_1_joint", 0.);
-  bc_->setHybridControlFactor("leg_left_2_joint", 0.);
-  bc_->setHybridControlFactor("leg_left_3_joint", 0.);
-  bc_->setHybridControlFactor("leg_left_4_joint", 0.);
-  bc_->setHybridControlFactor("leg_left_5_joint", 0.);
-  bc_->setHybridControlFactor("leg_left_6_joint", 0.);
-  bc_->setHybridControlFactor("leg_right_1_joint", 0.);
-  bc_->setHybridControlFactor("leg_right_2_joint", 0.);
-  bc_->setHybridControlFactor("leg_right_3_joint", 0.);
-  bc_->setHybridControlFactor("leg_right_4_joint", 0.);
-  bc_->setHybridControlFactor("leg_right_5_joint", 0.);
-  bc_->setHybridControlFactor("leg_right_6_joint", 0.);
+  bc_->setHybridControlFactor("leg_left_1_joint", 1.);
+  bc_->setHybridControlFactor("leg_left_2_joint", 1.);
+  bc_->setHybridControlFactor("leg_left_3_joint", 1.);
+  bc_->setHybridControlFactor("leg_left_4_joint", 1.);
+  bc_->setHybridControlFactor("leg_left_5_joint", 1.);
+  bc_->setHybridControlFactor("leg_left_6_joint", 1.);
+  bc_->setHybridControlFactor("leg_right_1_joint", 1.);
+  bc_->setHybridControlFactor("leg_right_2_joint", 1.);
+  bc_->setHybridControlFactor("leg_right_3_joint", 1.);
+  bc_->setHybridControlFactor("leg_right_4_joint", 1.);
+  bc_->setHybridControlFactor("leg_right_5_joint", 1.);
+  bc_->setHybridControlFactor("leg_right_6_joint", 1.);
 
 
     ini_com_pos_ = bc_->getActualCOMPosition();
