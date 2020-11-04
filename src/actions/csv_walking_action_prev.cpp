@@ -31,6 +31,7 @@ CSVWALKINGActionPrev::~CSVWALKINGActionPrev()
 bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bController,
                                 const property_bag::PropertyBag &pb)
 {
+    ROS_INFO_STREAM( "CSVWALKINGActionPrev::configure()");
   bc_ = bController;
 
 
@@ -272,7 +273,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
       count = com_traj_.time.size()-1;
   }
 //    ROS_INFO_STREAM( "internal_time_.toSec():" << internal_time_.toSec());
-//    ROS_INFO_STREAM( "count:" << count);
+    ROS_INFO_STREAM( "count:" << count);
 
     int cur_phase_index = 0;
     for (int i=0; i < num_of_phases_; i++){
