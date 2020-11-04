@@ -2,7 +2,7 @@ import time
 import rospy
 import roslaunch
 
-from trajectory.dsp_test2.trajectory_publisher import publish_all
+from trajectory.dsp_test1.trajectory_publisher import publish_all
 
 
 def launch_roscore():

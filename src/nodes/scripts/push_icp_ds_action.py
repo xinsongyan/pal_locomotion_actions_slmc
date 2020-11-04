@@ -2,7 +2,7 @@ import time
 import rospy
 import roslaunch
 
-from trajectory.dsp_test2.trajectory_publisher import publish_all
+from trajectory.dsp_test_DS2_SS2.trajectory_publisher import publish_all
 
 
 def launch_roscore():
@@ -39,7 +39,7 @@ def push_trajectory_to_ros_param_server():
     home = expanduser("~")
 
     # filename = home + '/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/com_trajectory.csv'
-    filename = home + '/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/dsp_test2/com_trajectory.csv'
+    filename = home + '/catkin_ws/src/pal_locomotion_actions_slmc/trajectory/dsp_test_DS2_SS2/com_trajectory.csv'
     com_trajectory = np.genfromtxt(filename, delimiter=',')
     com_trajectory_dict={'t':com_trajectory[:,0].tolist(),
                          'pos':{'x':com_trajectory[:,1].tolist(), 'y':com_trajectory[:,2].tolist(), 'z':com_trajectory[:,3].tolist()},

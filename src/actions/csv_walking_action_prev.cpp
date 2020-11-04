@@ -272,7 +272,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
       count = com_traj_.time.size()-1;
   }
 //    ROS_INFO_STREAM( "internal_time_.toSec():" << internal_time_.toSec());
-    ROS_INFO_STREAM( "count:" << count);
+//    ROS_INFO_STREAM( "count:" << count);
 
     int cur_phase_index = 0;
     for (int i=0; i < num_of_phases_; i++){
@@ -319,16 +319,16 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 
 
 
-//    ROS_INFO_STREAM("control() begin222!");
-//    icp_control(bc_,
-//            rate_limiter_,
-//            targetCOM_pos,
-//            targetCOM_vel,
-//            global_target_cop,
-//            parameters_.use_rate_limited_dcm_,
-//            targetCOP_rate_limited_unclamped_,
-//            targetCOP_unclamped_);
-//    ROS_INFO_STREAM("control() end222!");
+//    ROS_INFO_STREAM("icp_control() in!");
+    icp_control(bc_,
+            rate_limiter_,
+            targetCOM_pos,
+            targetCOM_vel,
+            global_target_cop,
+            parameters_.use_rate_limited_dcm_,
+            targetCOP_rate_limited_unclamped_,
+            targetCOP_unclamped_);
+//    ROS_INFO_STREAM("icp_control() out!");
 
 
 //    eMatrixHom cur_lf_pose = bc_->getActualFootPose(+Side::LEFT);
@@ -342,7 +342,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 //    bc_->setDesiredCOMPosition(targetCOM_pos);
 //    bc_->setDesiredCOMVelocity(targetCOM_vel);
 //    bc_->setDesiredCOMAcceleration(targetCOM_acc);
-    bc_->setDesiredCOMAcceleration(1*(targetCOM_pos - bc_->getActualCOMPosition()) + 1*(targetCOM_vel - bc_->getActualCOMVelocity()) + 1*targetCOM_acc);
+//    bc_->setDesiredCOMAcceleration(10*(targetCOM_pos - bc_->getActualCOMPosition()) + 1*(targetCOM_vel - bc_->getActualCOMVelocity()) + 1*targetCOM_acc);
 //    bc_->setDesiredICP(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
 //    bc_->setDesiredCOPReference(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
 //    bc_->setDesiredCOPComputed(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
