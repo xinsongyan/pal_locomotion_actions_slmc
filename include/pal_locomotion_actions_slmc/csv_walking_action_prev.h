@@ -86,6 +86,8 @@ public:
 
   Eigen::VectorXd std2eigen(const std::vector<double> std_vec);
 
+  Eigen::MatrixXd stdVector2EigenMatrixXd(std::vector<double> std_vec, int row, int col);
+
 private:
 
 
@@ -110,6 +112,7 @@ private:
     Eigen::MatrixXd support_durations_;
     Eigen::MatrixXd support_indexes_;
     Eigen::MatrixXd support_end_times_;
+    Eigen::MatrixXd foot_placements_;
     int num_of_phases_;
 
 
@@ -122,6 +125,7 @@ private:
   // robot initial state
   eVector3 ini_com_pos_;
   eMatrixHom ini_lf_pose_, ini_rf_pose_;
+  eMatrixHom final_lf_pose_, final_rf_pose_;
   eMatrixHom ini_local_pose_;
 
   double swing_height_;

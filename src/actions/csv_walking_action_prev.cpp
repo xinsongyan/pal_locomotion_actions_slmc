@@ -226,6 +226,34 @@ bool CSVWALKINGActionPrev::getTrajectoryFromRosParam(const ros::NodeHandle &nh, 
     num_of_phases_ = support_indexes_.size();
     ROS_INFO_STREAM("num_of_phases_ " << num_of_phases_);
 
+
+    std::vector<double> foot_placement;
+    key = "/foot_placements/data";
+    if (nh.getParam(key, foot_placement)){
+        ROS_INFO_STREAM("Successfully load " + key);
+        // ROS_INFO_STREAM("original foot placement :\n"+foot_placement);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+
+    int row_num;
+    key = "/foot_placements/row_number";
+    if (nh.getParam(key, row_num)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+
+    int col_num;
+    key = "/foot_placements/col_number";
+    if (nh.getParam(key, col_num)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
+    foot_placements_ = stdVector2EigenMatrixXd(foot_placement, row_num, col_num);
+    ROS_INFO_STREAM("foot placement_ :\n"<<foot_placements_);
+
 }
 
 
@@ -273,7 +301,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
       count = com_traj_.time.size()-1;
   }
 //    ROS_INFO_STREAM( "internal_time_.toSec():" << internal_time_.toSec());
-    ROS_INFO_STREAM( "count:" << count);
+    // ROS_INFO_STREAM( "count:" << count);
 
     int cur_phase_index = 0;
     for (int i=0; i < num_of_phases_; i++){
@@ -285,17 +313,18 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
         cur_phase_index = num_of_phases_-1;
     }
 
-//    ROS_INFO_STREAM( "cur_phase_index:" << cur_phase_index);
+    // ROS_INFO_STREAM( "cur_phase_index:" << cur_phase_index);
 
 
     int cur_support_index = support_indexes_(cur_phase_index);
-//    ROS_INFO_STREAM( "cur_support_index:"<< cur_support_index);
+    // ROS_INFO_STREAM( "cur_support_index:"<< cur_support_index);
 
     double cur_phase_duration = support_durations_(cur_phase_index);
-//    ROS_INFO_STREAM( "cur_phase_duration:"<< cur_phase_duration);
+    // ROS_INFO_STREAM( "cur_phase_duration:"<< cur_phase_duration);
 
     double cur_phase_time =  cur_phase_duration - (support_end_times_(cur_phase_index)-internal_time_.toSec());
-//    ROS_INFO_STREAM( "cur_phase_time:" << cur_phase_time);
+    // ROS_INFO_STREAM( "cur_phase_time:" << cur_phase_time);
+
 
 
 
@@ -309,14 +338,18 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     targetCOM_vel = com_traj_.vel.col(count);
     targetCOM_acc = com_traj_.acc.col(count);
 
-//    ROS_INFO_STREAM( "targetCOM_pos:" << targetCOM_pos.transpose());
-//    ROS_INFO_STREAM( "targetCOM_vel:" << targetCOM_vel.transpose());
-//    ROS_INFO_STREAM( "targetCOM_acc:" << targetCOM_acc.transpose());
+    // ROS_INFO_STREAM( "targetCOM_pos:" << targetCOM_pos.transpose());
+    // ROS_INFO_STREAM( "targetCOM_vel:" << targetCOM_vel.transpose());
+    // ROS_INFO_STREAM( "targetCOM_acc:" << targetCOM_acc.transpose());
 
     double w = sqrt(bc_->getParameters()->gravity_ / bc_->getParameters()->z_height_);
+    // ROS_INFO_STREAM("w is " << w);
     eVector2 global_target_dcm = targetCOM_pos.head(2) + targetCOM_vel.head(2) / w;
+    // ROS_INFO_STREAM("global target dcm is " << global_target_dcm);
     global_target_cop = global_target_dcm;
+    // ROS_INFO_STREAM("global_target_cop 1 is " << global_target_cop);
     global_target_cop = eVector2(zmp_x_(count), zmp_y_(count));
+    // ROS_INFO_STREAM("global_target_cop 2 is " << global_target_cop);
 
 
 
@@ -387,13 +420,18 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 
         if (!rfoot_swing_trajec_generated){
             eMatrixHom target_foot_pose = ini_rf_pose_;
+            final_rf_pose_ = ini_rf_pose_;
+            final_rf_pose_.translation().x() = foot_placements_(cur_phase_index, 3);
+            final_rf_pose_.translation().y() = foot_placements_(cur_phase_index, 4);
+            ROS_INFO_STREAM("Foot x is " << foot_placements_(cur_phase_index, 3));
+            ROS_INFO_STREAM("Foot y is " << foot_placements_(cur_phase_index, 4));
             target_foot_pose.translation().z() = swing_height_;
-            rfoot_swing_trajectory_ = SwingTrajectory3D(ini_rf_pose_, ini_rf_pose_, cur_phase_duration, swing_height_);
+            rfoot_swing_trajectory_ = SwingTrajectory3D(ini_rf_pose_, final_rf_pose_, cur_phase_duration, swing_height_);
             rfoot_swing_trajec_generated = true;
-            ROS_INFO_STREAM("rfoot_swing_trajec_generated!");
-            ROS_INFO_STREAM("rfoot_swing_down_trajec_generated!");
-            ROS_INFO_STREAM( "internal_time_:" << internal_time_.toSec());
-            ROS_INFO_STREAM( "count:" << count);
+            // ROS_INFO_STREAM("rfoot_swing_trajec_generated!");
+            // ROS_INFO_STREAM("rfoot_swing_down_trajec_generated!");
+            // ROS_INFO_STREAM( "internal_time_:" << internal_time_.toSec());
+            // ROS_INFO_STREAM( "count:" << count);
         }
 
 //         use rfoot_swing_trajectory_
@@ -428,8 +466,13 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 
         if (!lfoot_swing_trajec_generated){
             eMatrixHom target_foot_pose = ini_lf_pose_;
+            final_lf_pose_ = ini_lf_pose_;
+            final_lf_pose_.translation().x() = foot_placements_(cur_phase_index, 0);
+            final_lf_pose_.translation().y() = foot_placements_(cur_phase_index, 1);
+            ROS_INFO_STREAM("Foot x is " << foot_placements_(cur_phase_index, 0));
+            ROS_INFO_STREAM("Foot y is " << foot_placements_(cur_phase_index, 1));
             target_foot_pose.translation().z() = swing_height_;
-            lfoot_swing_trajectory_ = SwingTrajectory3D(ini_lf_pose_, ini_lf_pose_, cur_phase_duration, swing_height_);
+            lfoot_swing_trajectory_ = SwingTrajectory3D(ini_lf_pose_, final_lf_pose_, cur_phase_duration, swing_height_);
             lfoot_swing_trajec_generated = true;
             ROS_INFO_STREAM("lfoot_swing_trajec_generated!");
             ROS_INFO_STREAM("lfoot_swing_down_trajec_generated!");
@@ -494,5 +537,11 @@ bool CSVWALKINGActionPrev::endHook(const ros::Time &time)
 Eigen::VectorXd CSVWALKINGActionPrev::std2eigen(std::vector<double> std_vec){
     Eigen::VectorXd eigen_vec = Eigen::Map<Eigen::VectorXd>(std_vec.data(), std_vec.size());
     return eigen_vec;
+}
+
+
+Eigen::MatrixXd CSVWALKINGActionPrev::stdVector2EigenMatrixXd(std::vector<double> std_vec, int row, int col){
+    Eigen::MatrixXd eigen_mat = Eigen::Map<Eigen::MatrixXd>(std_vec.data(), col, row).transpose();
+    return eigen_mat;
 }
 }

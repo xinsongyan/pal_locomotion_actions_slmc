@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/opt/pal/ferrum/include/**",
+                "/opt/ros/melodic/include/**",
+                "/home/pal/talos_locomotion_ws/src/pal_locomotion_actions/include/**",
+                "/home/pal/talos_locomotion_ws/src/pal_locomotion_actions_slmc/include/**",
+                "/home/pal/talos_locomotion_ws/src/pal_locomotion_tutorials/include/**",
+                "/home/pal/talos_locomotion_ws/src/talos_pal_locomotion/include/**",
+                "/usr/include/**"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "configurationProvider": "go2sh.cmake-integration"
+        }
+    ],
+    "version": 4
+}
