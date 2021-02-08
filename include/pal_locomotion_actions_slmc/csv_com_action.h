@@ -49,7 +49,7 @@ public:
 
   bool endHook(const ros::Time &time) override;
 
-  bool getComTrajectory(ros::NodeHandle &nh);
+  void getComTrajectory(ros::NodeHandle &nh);
   Eigen::VectorXd std2eigen(const std::vector<double> std_vec);
 
 private:

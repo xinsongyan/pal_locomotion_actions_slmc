@@ -40,7 +40,7 @@ bool CSVWALKINGAction::configure(ros::NodeHandle &nh, BController *bController,
   return true;
 }
 
-bool CSVWALKINGAction::getCSVTrajectory(const ros::NodeHandle &nh, const std::string & name, TrajectoryFromCSV & traj){
+void CSVWALKINGAction::getCSVTrajectory(const ros::NodeHandle &nh, const std::string & name, TrajectoryFromCSV & traj){
     std::string key = "/" + name + "_trajectory/t";
     if (nh.getParam(key, trajectory_t_)){
         ROS_INFO_STREAM("Successfully load " + key);
@@ -99,7 +99,7 @@ bool CSVWALKINGAction::getCSVTrajectory(const ros::NodeHandle &nh, const std::st
     ROS_INFO_STREAM(name + "_trajectory is generated.");
 }
 
-bool CSVWALKINGAction::getCSVContactSequence(const ros::NodeHandle &nh, ContactSequenceFromCSV & cs){
+void CSVWALKINGAction::getCSVContactSequence(const ros::NodeHandle &nh, ContactSequenceFromCSV & cs){
   std::string key = "/contact_sequence/t_end";
   if (nh.getParam(key, trajectory_t_)){
       ROS_INFO_STREAM("Successfully load " + key);

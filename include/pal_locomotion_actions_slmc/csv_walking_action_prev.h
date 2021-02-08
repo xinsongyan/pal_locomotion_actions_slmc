@@ -80,9 +80,9 @@ public:
 
   bool endHook(const ros::Time &time) override;
 
-  bool getTrajectoryFromRosParam(const ros::NodeHandle &nh, const std::string & name, Trajectory & traj);
+  void getTrajectoryFromRosParam(const ros::NodeHandle &nh, const std::string & name, Trajectory & traj);
 
-  bool getZmpTrajectoryFromRosParam(const ros::NodeHandle &nh);
+  void getZmpTrajectoryFromRosParam(const ros::NodeHandle &nh);
 
   Eigen::VectorXd std2eigen(const std::vector<double> std_vec);
 

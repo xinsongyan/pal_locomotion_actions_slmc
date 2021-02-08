@@ -72,8 +72,8 @@ public:
 
   bool endHook(const ros::Time &time) override;
 
-  bool getCSVTrajectory(const ros::NodeHandle &nh, const std::string & name, TrajectoryFromCSV & traj);
-  bool getCSVContactSequence(const ros::NodeHandle &nh, ContactSequenceFromCSV & cs);
+  void getCSVTrajectory(const ros::NodeHandle &nh, const std::string & name, TrajectoryFromCSV & traj);
+  void getCSVContactSequence(const ros::NodeHandle &nh, ContactSequenceFromCSV & cs);
 
   Eigen::VectorXd std2eigen(const std::vector<double> std_vec);
 

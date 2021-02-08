@@ -57,7 +57,7 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
     return true;
 }
 
-bool CSVWALKINGActionPrev::getZmpTrajectoryFromRosParam(const ros::NodeHandle &nh){
+void CSVWALKINGActionPrev::getZmpTrajectoryFromRosParam(const ros::NodeHandle &nh){
     std::string key;
     key = "/zmp_trajectory/t";
     std::vector<double> std_zmp_t;
@@ -101,7 +101,7 @@ bool CSVWALKINGActionPrev::getZmpTrajectoryFromRosParam(const ros::NodeHandle &n
     zmp_z_ = eigen_zmp_z;
 }
 
-bool CSVWALKINGActionPrev::getTrajectoryFromRosParam(const ros::NodeHandle &nh, const std::string & name, Trajectory & traj){
+void CSVWALKINGActionPrev::getTrajectoryFromRosParam(const ros::NodeHandle &nh, const std::string & name, Trajectory & traj){
     std::vector<double> trajectory_t_;
     std::vector<double> trajectory_pos_x_;
     std::vector<double> trajectory_pos_y_;

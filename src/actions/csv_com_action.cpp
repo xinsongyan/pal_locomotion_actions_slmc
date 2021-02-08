@@ -42,7 +42,7 @@ bool CSVCOMAction::configure(ros::NodeHandle &nh, BController *bController,
   return true;
 }
 
-bool CSVCOMAction::getComTrajectory(ros::NodeHandle &nh){
+void CSVCOMAction::getComTrajectory(ros::NodeHandle &nh){
 
     std::string key = "/com_trajectory/t";
     if (nh.getParam(key, com_trajectory_t_)){
