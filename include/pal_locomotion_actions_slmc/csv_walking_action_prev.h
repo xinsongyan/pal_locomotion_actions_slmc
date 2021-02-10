@@ -125,7 +125,6 @@ private:
   // robot initial state
   eVector3 ini_com_pos_;
   eMatrixHom ini_lf_pose_, ini_rf_pose_;
-  eMatrixHom final_lf_pose_, final_rf_pose_;
   eMatrixHom ini_local_pose_;
 
   double swing_height_;

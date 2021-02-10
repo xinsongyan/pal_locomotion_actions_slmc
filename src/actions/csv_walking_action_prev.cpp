@@ -307,6 +307,8 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     for (int i=0; i < num_of_phases_; i++){
         if (internal_time_.toSec()>support_end_times_(i)){
             cur_phase_index = i+1;
+            rfoot_swing_trajec_generated = false;
+            lfoot_swing_trajec_generated = false;
             }
     }
     if (cur_phase_index > num_of_phases_-1){
@@ -334,6 +336,9 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     eVector3 targetCOM_pos, targetCOM_vel, targetCOM_acc;
     eVector2 global_target_cop;
 
+    // targetCOM_pos = ini_com_pos_;
+    // targetCOM_pos.x() = com_traj_.pos.col(count)[0];
+    // targetCOM_pos.y() = com_traj_.pos.col(count)[1];
     targetCOM_pos = com_traj_.pos.col(count);
     targetCOM_vel = com_traj_.vel.col(count);
     targetCOM_acc = com_traj_.acc.col(count);
@@ -398,6 +403,8 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
         bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
         bc_->setSwingLegIDs({});
 
+        // ROS_INFO_STREAM("DOUBLE SUPPORT !!!!!!!!!!!!!!!!!!!!!");
+
 
 
 
@@ -419,14 +426,20 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
         bc_->setSwingLegIDs({Side::RIGHT});
 
         if (!rfoot_swing_trajec_generated){
-            eMatrixHom target_foot_pose = ini_rf_pose_;
+              eMatrixHom start_rf_pose_, final_rf_pose_;
+            start_rf_pose_ = ini_rf_pose_;
             final_rf_pose_ = ini_rf_pose_;
-            final_rf_pose_.translation().x() = foot_placements_(cur_phase_index, 3);
-            final_rf_pose_.translation().y() = foot_placements_(cur_phase_index, 4);
+            start_rf_pose_.translation().x() = foot_placements_(cur_phase_index-1, 3); //  + ini_com_pos_.x()
+            start_rf_pose_.translation().y() = foot_placements_(cur_phase_index-1, 4); //  + ini_com_pos_.y()
+            // start_rf_pose_.translation().z() = 0.0;
+            final_rf_pose_.translation().x() = foot_placements_(cur_phase_index, 3); //  + ini_com_pos_.x()
+            final_rf_pose_.translation().y() = foot_placements_(cur_phase_index, 4); //  + ini_com_pos_.y()
+            // final_rf_pose_.translation().z() = 0.0;
             ROS_INFO_STREAM("Foot x is " << foot_placements_(cur_phase_index, 3));
             ROS_INFO_STREAM("Foot y is " << foot_placements_(cur_phase_index, 4));
-            target_foot_pose.translation().z() = swing_height_;
-            rfoot_swing_trajectory_ = SwingTrajectory3D(ini_rf_pose_, final_rf_pose_, cur_phase_duration, swing_height_);
+            ROS_INFO_STREAM("LEFT SUPPORT !!!!!!!!!!!!!!!!!!!!!");
+    
+            rfoot_swing_trajectory_ = SwingTrajectory3D(start_rf_pose_, final_rf_pose_, cur_phase_duration, swing_height_);
             rfoot_swing_trajec_generated = true;
             // ROS_INFO_STREAM("rfoot_swing_trajec_generated!");
             // ROS_INFO_STREAM("rfoot_swing_down_trajec_generated!");
@@ -465,14 +478,19 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 
 
         if (!lfoot_swing_trajec_generated){
-            eMatrixHom target_foot_pose = ini_lf_pose_;
+            eMatrixHom start_lf_pose_, final_lf_pose_;
+            start_lf_pose_ = ini_lf_pose_;
             final_lf_pose_ = ini_lf_pose_;
-            final_lf_pose_.translation().x() = foot_placements_(cur_phase_index, 0);
-            final_lf_pose_.translation().y() = foot_placements_(cur_phase_index, 1);
+            start_lf_pose_.translation().x() = foot_placements_(cur_phase_index-1, 0); //  + ini_com_pos_.x()
+            start_lf_pose_.translation().y() = foot_placements_(cur_phase_index-1, 1); //  + ini_com_pos_.y()
+            // start_lf_pose_.translation().z() = 0.0;
+            final_lf_pose_.translation().x() = foot_placements_(cur_phase_index, 0); //  + ini_com_pos_.x()
+            final_lf_pose_.translation().y() = foot_placements_(cur_phase_index, 1); //  + ini_com_pos_.y()
+            // final_lf_pose_.translation().z() = 0.0;
             ROS_INFO_STREAM("Foot x is " << foot_placements_(cur_phase_index, 0));
             ROS_INFO_STREAM("Foot y is " << foot_placements_(cur_phase_index, 1));
-            target_foot_pose.translation().z() = swing_height_;
-            lfoot_swing_trajectory_ = SwingTrajectory3D(ini_lf_pose_, final_lf_pose_, cur_phase_duration, swing_height_);
+            ROS_INFO_STREAM("RIGHT SUPPORT !!!!!!!!!!!!!!!!!!!!!");
+            lfoot_swing_trajectory_ = SwingTrajectory3D(start_lf_pose_, final_lf_pose_, cur_phase_duration, swing_height_);
             lfoot_swing_trajec_generated = true;
             ROS_INFO_STREAM("lfoot_swing_trajec_generated!");
             ROS_INFO_STREAM("lfoot_swing_down_trajec_generated!");
