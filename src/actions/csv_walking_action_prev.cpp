@@ -38,14 +38,14 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
     dt_ = bc_->getControllerDt();
     ROS_INFO_STREAM( "dt_:" << dt_.toSec());
 
-    swing_height_ = 0.05;
-    ROS_INFO_STREAM( "swing_height_:" << swing_height_);
+//    swing_height_ = 0.05;
+//    ROS_INFO_STREAM( "swing_height_:" << swing_height_);
 
     getTrajectoryFromRosParam(nh, "com", com_traj_);
 //    getTrajectoryFromRosParam(nh, "lfoot", lfoot_traj_);
 //    getTrajectoryFromRosParam(nh, "rfoot", rfoot_traj_);
     getZmpTrajectoryFromRosParam(nh);
-
+    getSwingHeightFromRosParam(nh);
 
     rate_limiter_.reset(new HighPassRateLimiterVector2d(
       "dcm_rate_limiter", nh, bc_->getControllerDt(), parameters_.hpl_paramters_));
@@ -55,6 +55,16 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
 
 
     return true;
+}
+
+void CSVWALKINGActionPrev::getSwingHeightFromRosParam(const ros::NodeHandle &nh){
+    std::string key;
+    key = "/swing_height";
+    if (nh.getParam(key, swing_height_)){
+        ROS_INFO_STREAM("Successfully load " + key);
+    }else{
+        ROS_INFO_STREAM("Fail to load " + key);
+    }
 }
 
 void CSVWALKINGActionPrev::getZmpTrajectoryFromRosParam(const ros::NodeHandle &nh){

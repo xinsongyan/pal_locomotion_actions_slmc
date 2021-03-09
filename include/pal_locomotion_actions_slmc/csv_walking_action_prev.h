@@ -84,6 +84,8 @@ public:
 
   void getZmpTrajectoryFromRosParam(const ros::NodeHandle &nh);
 
+  void getSwingHeightFromRosParam(const ros::NodeHandle &nh);
+
   Eigen::VectorXd std2eigen(const std::vector<double> std_vec);
 
   Eigen::MatrixXd stdVector2EigenMatrixXd(std::vector<double> std_vec, int row, int col);
