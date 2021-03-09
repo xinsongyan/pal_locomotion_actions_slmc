@@ -441,10 +441,10 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
             final_rf_pose_ = ini_rf_pose_;
             start_rf_pose_.translation().x() = foot_placements_(cur_phase_index-1, 3); //  + ini_com_pos_.x()
             start_rf_pose_.translation().y() = foot_placements_(cur_phase_index-1, 4); //  + ini_com_pos_.y()
-            // start_rf_pose_.translation().z() = 0.0;
+            start_rf_pose_.translation().z() = foot_placements_(cur_phase_index-1, 5);
             final_rf_pose_.translation().x() = foot_placements_(cur_phase_index, 3); //  + ini_com_pos_.x()
             final_rf_pose_.translation().y() = foot_placements_(cur_phase_index, 4); //  + ini_com_pos_.y()
-            // final_rf_pose_.translation().z() = 0.0;
+            final_rf_pose_.translation().z() = foot_placements_(cur_phase_index, 5);
             ROS_INFO_STREAM("Foot x is " << foot_placements_(cur_phase_index, 3));
             ROS_INFO_STREAM("Foot y is " << foot_placements_(cur_phase_index, 4));
             ROS_INFO_STREAM("LEFT SUPPORT !!!!!!!!!!!!!!!!!!!!!");
@@ -493,10 +493,10 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
             final_lf_pose_ = ini_lf_pose_;
             start_lf_pose_.translation().x() = foot_placements_(cur_phase_index-1, 0); //  + ini_com_pos_.x()
             start_lf_pose_.translation().y() = foot_placements_(cur_phase_index-1, 1); //  + ini_com_pos_.y()
-            // start_lf_pose_.translation().z() = 0.0;
+            start_lf_pose_.translation().z() = foot_placements_(cur_phase_index-1, 2);
             final_lf_pose_.translation().x() = foot_placements_(cur_phase_index, 0); //  + ini_com_pos_.x()
             final_lf_pose_.translation().y() = foot_placements_(cur_phase_index, 1); //  + ini_com_pos_.y()
-            // final_lf_pose_.translation().z() = 0.0;
+            final_lf_pose_.translation().z() = foot_placements_(cur_phase_index, 2);
             ROS_INFO_STREAM("Foot x is " << foot_placements_(cur_phase_index, 0));
             ROS_INFO_STREAM("Foot y is " << foot_placements_(cur_phase_index, 1));
             ROS_INFO_STREAM("RIGHT SUPPORT !!!!!!!!!!!!!!!!!!!!!");
