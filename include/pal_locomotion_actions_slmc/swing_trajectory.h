@@ -120,17 +120,20 @@ public:
         swing_height_ = swing_height;
 
 //        Eigen::Vector3d mid_pos = (ini_pos_ + fin_pos_)/2.0;
-        Eigen::Vector3d mid_pos = ini_pos_;
-        mid_pos.z() += swing_height_;
+        Eigen::Vector3d mid1_pos = ini_pos_;
+        mid1_pos.z() += swing_height_;
+        Eigen::Vector3d mid2_pos = fin_pos_;
+        mid2_pos.z() += swing_height_/4.0;
 
         double ini_time = 0.0;
-        double mid_time = swing_duration_/2.0;
+        double mid1_time = swing_duration_/3.0;
+        double mid2_time = 2.0*swing_duration_/3.0;
         double fin_time = swing_duration_;
 
-        std::vector<double> t={ini_time, mid_time, fin_time};
-        std::vector<double> x={ini_pos_(0), mid_pos(0), fin_pos_(0)};
-        std::vector<double> y={ini_pos_(1), mid_pos(1), fin_pos_(1)};
-        std::vector<double> z={ini_pos_(2), mid_pos(2), fin_pos_(2)};
+        std::vector<double> t={ini_time, mid1_time, mid2_time, fin_time};
+        std::vector<double> x={ini_pos_(0), mid1_pos(0), mid2_pos(0), fin_pos_(0)};
+        std::vector<double> y={ini_pos_(1), mid1_pos(1), mid2_pos(1), fin_pos_(1)};
+        std::vector<double> z={ini_pos_(2), mid1_pos(2), mid2_pos(2), fin_pos_(2)};
 
         spline_x_.set_boundary(tk::spline::first_deriv, ini_vel_(0),tk::spline::first_deriv, fin_vel_(0), false);
         spline_y_.set_boundary(tk::spline::first_deriv, ini_vel_(1),tk::spline::first_deriv, fin_vel_(1), false);
