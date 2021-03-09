@@ -119,7 +119,8 @@ public:
         swing_duration_ = swing_duration;
         swing_height_ = swing_height;
 
-        Eigen::Vector3d mid_pos = (ini_pos_ + fin_pos_)/2.0;
+//        Eigen::Vector3d mid_pos = (ini_pos_ + fin_pos_)/2.0;
+        Eigen::Vector3d mid_pos = ini_pos_;
         mid_pos.z() += swing_height_;
 
         double ini_time = 0.0;

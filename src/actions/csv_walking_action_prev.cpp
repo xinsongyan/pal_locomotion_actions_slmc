@@ -448,7 +448,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
             ROS_INFO_STREAM("Foot x is " << foot_placements_(cur_phase_index, 3));
             ROS_INFO_STREAM("Foot y is " << foot_placements_(cur_phase_index, 4));
             ROS_INFO_STREAM("LEFT SUPPORT !!!!!!!!!!!!!!!!!!!!!");
-            Eigen::Vector3d ini_vel(0,0,0.1);
+            Eigen::Vector3d ini_vel(0,0,0);
             Eigen::Vector3d fin_vel(0,0,0);
             rfoot_swing_trajectory_ = SwingTrajectory3D(start_rf_pose_, final_rf_pose_, cur_phase_duration, swing_height_, ini_vel, fin_vel);
             rfoot_swing_trajec_generated = true;
@@ -501,7 +501,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
             ROS_INFO_STREAM("Foot x is " << foot_placements_(cur_phase_index, 0));
             ROS_INFO_STREAM("Foot y is " << foot_placements_(cur_phase_index, 1));
             ROS_INFO_STREAM("RIGHT SUPPORT !!!!!!!!!!!!!!!!!!!!!");
-            Eigen::Vector3d ini_vel(0,0,0.1);
+            Eigen::Vector3d ini_vel(0,0,0);
             Eigen::Vector3d fin_vel(0,0,0);
             lfoot_swing_trajectory_ = SwingTrajectory3D(start_lf_pose_, final_lf_pose_, cur_phase_duration, swing_height_, ini_vel, fin_vel);
             lfoot_swing_trajec_generated = true;
