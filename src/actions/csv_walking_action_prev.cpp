@@ -38,6 +38,8 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
     dt_ = bc_->getControllerDt();
     ROS_INFO_STREAM( "dt_:" << dt_.toSec());
 
+    n_com_states_ = 6;
+
 //    swing_height_ = 0.05;
 //    ROS_INFO_STREAM( "swing_height_:" << swing_height_);
 
@@ -46,6 +48,9 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
 //    getTrajectoryFromRosParam(nh, "rfoot", rfoot_traj_);
     getZmpTrajectoryFromRosParam(nh);
     getSwingHeightFromRosParam(nh);
+
+    com_states_pub_.reset(
+        new realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>(nh, "com_states", 1));
 
     rate_limiter_.reset(new HighPassRateLimiterVector2d(
       "dcm_rate_limiter", nh, bc_->getControllerDt(), parameters_.hpl_paramters_));
@@ -369,14 +374,14 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 
 
 //    ROS_INFO_STREAM("icp_control() in!");
-    // icp_control(bc_,
-    //         rate_limiter_,
-    //         targetCOM_pos,
-    //         targetCOM_vel,
-    //         global_target_cop,
-    //         parameters_.use_rate_limited_dcm_,
-    //         targetCOP_rate_limited_unclamped_,
-    //         targetCOP_unclamped_);
+    icp_control(bc_,
+            rate_limiter_,
+            targetCOM_pos,
+            targetCOM_vel,
+            global_target_cop,
+            parameters_.use_rate_limited_dcm_,
+            targetCOP_rate_limited_unclamped_,
+            targetCOP_unclamped_);
 //    ROS_INFO_STREAM("icp_control() out!");
 
 
@@ -388,10 +393,10 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 //    targetCOM_pos(2) = cur_local_pose.translation().z() + bc_->getParameters()->z_height_;
 //    targetCOM_vel = eVector3(0.0, 0.0, 0.0);
 
-   bc_->setDesiredCOMPosition(targetCOM_pos);
-   bc_->setDesiredCOMVelocity(targetCOM_vel);
+//    bc_->setDesiredCOMPosition(targetCOM_pos);
+//    bc_->setDesiredCOMVelocity(targetCOM_vel);
 //    bc_->setDesiredCOMAcceleration(targetCOM_acc);
-   bc_->setDesiredCOMAcceleration(10*(targetCOM_pos - bc_->getActualCOMPosition()) + 2*(targetCOM_vel - bc_->getActualCOMVelocity()) + 0.1*targetCOM_acc);
+//    bc_->setDesiredCOMAcceleration(10*(targetCOM_pos - bc_->getActualCOMPosition()) + 1*(targetCOM_vel - bc_->getActualCOMVelocity()) + 1*targetCOM_acc);
 //    bc_->setDesiredICP(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
 //    bc_->setDesiredCOPReference(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
 //    bc_->setDesiredCOPComputed(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
@@ -544,6 +549,18 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
   bc_->setDesiredBaseOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
   bc_->setDesiredTorsoOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
 
+    if (com_states_pub_ && com_states_pub_->trylock())
+    {   
+        current_com_pos_ = bc_->getActualCOMPosition();
+        com_states_pub_->msg_.data.resize(n_com_states_);
+        com_states_pub_->msg_.data[0] = current_com_pos_.x();
+        com_states_pub_->msg_.data[1] = current_com_pos_.y();
+        com_states_pub_->msg_.data[2] = current_com_pos_.z();
+        com_states_pub_->msg_.data[3] = targetCOM_pos.x();
+        com_states_pub_->msg_.data[4] = targetCOM_pos.y();
+        com_states_pub_->msg_.data[5] = targetCOM_pos.z();
+        com_states_pub_->unlockAndPublish();
+    }
 
   // update internal time
   internal_time_ += dt_;

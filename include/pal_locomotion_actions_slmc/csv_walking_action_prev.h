@@ -7,6 +7,12 @@
 #include <pal_ros_utils/reference/pose/pose_reference_minjerk_topic.h>
 //#include <pal_locomotion_actions_slmc/csv_utils.h>
 
+// For realtime publisher and subscriber
+#include <realtime_tools/realtime_publisher.h>
+#include <std_msgs/Float64MultiArray.h>
+#include <realtime_tools/realtime_buffer.h>
+#include <ros/node_handle.h>
+
 #include <pal_locomotion_actions_slmc/swing_trajectory.h>
 
 namespace pal_locomotion
@@ -101,6 +107,9 @@ private:
 
   CSVWALKINGActionPrevParameters parameters_;
 
+  std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>> com_states_pub_;
+
+
   math_utils::HighPassRateLimiterVector2dPtr rate_limiter_;
   eVector2 targetCOP_rate_limited_unclamped_;
   eVector2 targetCOP_unclamped_;
@@ -126,10 +135,13 @@ private:
 
   // robot initial state
   eVector3 ini_com_pos_;
+  eVector3 current_com_pos_;
   eMatrixHom ini_lf_pose_, ini_rf_pose_;
   eMatrixHom ini_local_pose_;
 
   double swing_height_;
+
+  double n_com_states_;
 
   int pre_phase_index_;
 
