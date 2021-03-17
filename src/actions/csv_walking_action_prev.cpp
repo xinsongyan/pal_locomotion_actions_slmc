@@ -48,6 +48,7 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
 //    getTrajectoryFromRosParam(nh, "rfoot", rfoot_traj_);
     getZmpTrajectoryFromRosParam(nh);
     getSwingHeightFromRosParam(nh);
+    getComGainFromRosParam(nh);
 
     com_states_pub_.reset(
         new realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>(nh, "com_states", 1));
@@ -70,6 +71,12 @@ void CSVWALKINGActionPrev::getSwingHeightFromRosParam(const ros::NodeHandle &nh)
     }else{
         ROS_INFO_STREAM("Fail to load " + key);
     }
+}
+
+void CSVWALKINGActionPrev::getComGainFromRosParam(const ros::NodeHandle &nh){
+    if (nh.getParam("/com_gain/com_fb_kp", com_fb_kp_)){ROS_INFO_STREAM("Successfully load /com_gain/com_fb_kp");}else{ROS_INFO_STREAM("Fail to load /com_gain/com_fb_kp");}
+    if (nh.getParam("/com_gain/com_fb_kd", com_fb_kd_)){ROS_INFO_STREAM("Successfully load /com_gain/com_fb_kd");}else{ROS_INFO_STREAM("Fail to load /com_gain/com_fb_kd");}
+    if (nh.getParam("/com_gain/com_ff_kp", com_ff_kp_)){ROS_INFO_STREAM("Successfully load /com_gain/com_ff_kp");}else{ROS_INFO_STREAM("Fail to load /com_gain/com_ff_kp");}
 }
 
 void CSVWALKINGActionPrev::getZmpTrajectoryFromRosParam(const ros::NodeHandle &nh){
@@ -396,7 +403,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 //    bc_->setDesiredCOMPosition(targetCOM_pos);
 //    bc_->setDesiredCOMVelocity(targetCOM_vel);
 //    bc_->setDesiredCOMAcceleration(targetCOM_acc);
-   bc_->setDesiredCOMAcceleration(30*(targetCOM_pos - bc_->getActualCOMPosition()) + 6*(targetCOM_vel - bc_->getActualCOMVelocity()) + 0*targetCOM_acc);
+   bc_->setDesiredCOMAcceleration(com_fb_kp_*(targetCOM_pos - bc_->getActualCOMPosition()) + com_fb_kd_*(targetCOM_vel - bc_->getActualCOMVelocity()) + com_ff_kp_*targetCOM_acc);
 //    bc_->setDesiredICP(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
 //    bc_->setDesiredCOPReference(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
 //    bc_->setDesiredCOPComputed(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
