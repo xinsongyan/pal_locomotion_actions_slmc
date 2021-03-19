@@ -15,6 +15,9 @@
 
 #include <pal_locomotion_actions_slmc/swing_trajectory.h>
 
+#include "std_srvs/Trigger.h"
+
+
 namespace pal_locomotion
 {
 
@@ -94,9 +97,13 @@ public:
 
   void getComGainFromRosParam(const ros::NodeHandle &nh);
 
+  bool triggerCallback(std_srvs::Trigger::Request  &req, std_srvs::Trigger::Response &res);
+
   Eigen::VectorXd std2eigen(const std::vector<double> std_vec);
 
   Eigen::MatrixXd stdVector2EigenMatrixXd(std::vector<double> std_vec, int row, int col);
+
+
 
 private:
 

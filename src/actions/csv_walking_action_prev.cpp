@@ -59,7 +59,7 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
     rate_limiter_.reset(new HighPassRateLimiterVector2d(
       "dcm_rate_limiter", nh, bc_->getControllerDt(), parameters_.hpl_paramters_));
 
-    
+
     // ROS_INFO_STREAM( "sleep 30!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     // ros::Duration(10).sleep();
     // ROS_INFO_STREAM( "sleep 20!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -67,9 +67,18 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
     // ROS_INFO_STREAM( "sleep 10!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     ros::Duration(10).sleep();
 
+    // ros service
+    ros::ServiceServer trigger_service_server = nh.advertiseService("trigger", &CSVWALKINGActionPrev::triggerCallback, this);
+
 
     return true;
 }
+
+bool CSVWALKINGActionPrev::triggerCallback(std_srvs::Trigger::Request  &req, std_srvs::Trigger::Response &res){
+    ROS_INFO("Trigger request!");
+    return true;
+}
+
 
 void CSVWALKINGActionPrev::getSwingHeightFromRosParam(const ros::NodeHandle &nh){
     std::string key;
@@ -562,7 +571,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
   bc_->setDesiredTorsoOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
 
     if (com_states_pub_ && com_states_pub_->trylock())
-    {   
+    {
         current_com_pos_ = bc_->getActualCOMPosition();
         com_states_pub_->msg_.data.resize(n_com_states_);
         com_states_pub_->msg_.data[0] = current_com_pos_.x();
@@ -575,7 +584,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     }
 
     if (foot_poses_pub_ && foot_poses_pub_->trylock())
-    {   
+    {
         actual_lf_pose = bc_->getActualFootPose(Side::LEFT);
         actual_rf_pose = bc_->getActualFootPose(Side::RIGHT);
         foot_poses_pub_->msg_.data.resize(n_foot_poses_);
@@ -594,7 +603,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
         // ROS_INFO_STREAM("current support index is " << cur_support_index);
         if (cur_support_index == 1 && rfoot_swing_trajec_generated){ // left support
             ROS_INFO_STREAM("Left Support Publishing!!!");
-            
+
             foot_poses_pub_->msg_.data[6] = rfoot_swing_trajectory_.pos(cur_phase_time).x();
             foot_poses_pub_->msg_.data[7] = rfoot_swing_trajectory_.pos(cur_phase_time).y();
             foot_poses_pub_->msg_.data[8] = rfoot_swing_trajectory_.pos(cur_phase_time).z();
