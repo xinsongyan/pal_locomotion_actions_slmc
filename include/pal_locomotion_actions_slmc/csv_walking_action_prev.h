@@ -110,6 +110,7 @@ private:
   CSVWALKINGActionPrevParameters parameters_;
 
   std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>> com_states_pub_;
+  std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>> foot_poses_pub_;
 
 
   math_utils::HighPassRateLimiterVector2dPtr rate_limiter_;
@@ -138,12 +139,16 @@ private:
   // robot initial state
   eVector3 ini_com_pos_;
   eVector3 current_com_pos_;
+  std::vector<eVector3> des_foot_pos_;
+  eMatrixHom actual_lf_pose, actual_rf_pose;
+  std::pair<eVector3, eVector3> actual_lf_vel, actual_rf_vel;
   eMatrixHom ini_lf_pose_, ini_rf_pose_;
   eMatrixHom ini_local_pose_;
 
   double swing_height_;
 
   double n_com_states_;
+  double n_foot_poses_;
 
   double com_fb_kp_;
   double com_fb_kd_;

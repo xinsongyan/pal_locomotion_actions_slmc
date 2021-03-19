@@ -39,8 +39,8 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
     ROS_INFO_STREAM( "dt_:" << dt_.toSec());
 
     n_com_states_ = 6;
+    n_foot_poses_ = 12;
 
-//    swing_height_ = 0.05;
 //    ROS_INFO_STREAM( "swing_height_:" << swing_height_);
 
     getTrajectoryFromRosParam(nh, "com", com_traj_);
@@ -53,11 +53,19 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
     com_states_pub_.reset(
         new realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>(nh, "com_states", 1));
 
+    foot_poses_pub_.reset(
+        new realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>(nh, "foot_poses", 1));
+
     rate_limiter_.reset(new HighPassRateLimiterVector2d(
       "dcm_rate_limiter", nh, bc_->getControllerDt(), parameters_.hpl_paramters_));
 
-
-
+    
+    // ROS_INFO_STREAM( "sleep 30!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    // ros::Duration(10).sleep();
+    // ROS_INFO_STREAM( "sleep 20!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    // ros::Duration(10).sleep();
+    // ROS_INFO_STREAM( "sleep 10!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    ros::Duration(10).sleep();
 
 
     return true;
@@ -447,8 +455,9 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
         bc_->setStanceLegIDs({Side::LEFT});
         bc_->setSwingLegIDs({Side::RIGHT});
 
+
         if (!rfoot_swing_trajec_generated){
-              eMatrixHom start_rf_pose_, final_rf_pose_;
+            eMatrixHom start_rf_pose_, final_rf_pose_;
             start_rf_pose_ = ini_rf_pose_;
             final_rf_pose_ = ini_rf_pose_;
             start_rf_pose_.translation().x() = foot_placements_(cur_phase_index-1, 3); //  + ini_com_pos_.x()
@@ -538,10 +547,6 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
     }
 
 
-
-
-
-
 //  control(bc_,
 //          rate_limiter_,
 //          targetCOM_pos,
@@ -567,6 +572,46 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
         com_states_pub_->msg_.data[4] = targetCOM_pos.y();
         com_states_pub_->msg_.data[5] = targetCOM_pos.z();
         com_states_pub_->unlockAndPublish();
+    }
+
+    if (foot_poses_pub_ && foot_poses_pub_->trylock())
+    {   
+        actual_lf_pose = bc_->getActualFootPose(Side::LEFT);
+        actual_rf_pose = bc_->getActualFootPose(Side::RIGHT);
+        foot_poses_pub_->msg_.data.resize(n_foot_poses_);
+        foot_poses_pub_->msg_.data[0] = actual_lf_pose.translation().x();
+        foot_poses_pub_->msg_.data[1] = actual_lf_pose.translation().y();
+        foot_poses_pub_->msg_.data[2] = actual_lf_pose.translation().z();
+        foot_poses_pub_->msg_.data[3] = actual_rf_pose.translation().x();
+        foot_poses_pub_->msg_.data[4] = actual_rf_pose.translation().y();
+        foot_poses_pub_->msg_.data[5] = actual_rf_pose.translation().z();
+        foot_poses_pub_->msg_.data[6] = 0.0;
+        foot_poses_pub_->msg_.data[7] = 0.0;
+        foot_poses_pub_->msg_.data[8] = 0.0;
+        foot_poses_pub_->msg_.data[9] = 0.0;
+        foot_poses_pub_->msg_.data[10] = 0.0;
+        foot_poses_pub_->msg_.data[11] = 0.0;
+        // ROS_INFO_STREAM("current support index is " << cur_support_index);
+        if (cur_support_index == 1 && rfoot_swing_trajec_generated){ // left support
+            ROS_INFO_STREAM("Left Support Publishing!!!");
+            
+            foot_poses_pub_->msg_.data[6] = rfoot_swing_trajectory_.pos(cur_phase_time).x();
+            foot_poses_pub_->msg_.data[7] = rfoot_swing_trajectory_.pos(cur_phase_time).y();
+            foot_poses_pub_->msg_.data[8] = rfoot_swing_trajectory_.pos(cur_phase_time).z();
+            foot_poses_pub_->msg_.data[9] = rfoot_swing_trajectory_.vel(cur_phase_time).x();
+            foot_poses_pub_->msg_.data[10] = rfoot_swing_trajectory_.vel(cur_phase_time).y();
+            foot_poses_pub_->msg_.data[11] = rfoot_swing_trajectory_.vel(cur_phase_time).z();
+        }
+        else if (cur_support_index == -1 && lfoot_swing_trajec_generated){ // right support
+            ROS_INFO_STREAM("Right Support Publishing!!!");
+            foot_poses_pub_->msg_.data[6] = lfoot_swing_trajectory_.pos(cur_phase_time).x();
+            foot_poses_pub_->msg_.data[7] = lfoot_swing_trajectory_.pos(cur_phase_time).y();
+            foot_poses_pub_->msg_.data[8] = lfoot_swing_trajectory_.pos(cur_phase_time).z();
+            foot_poses_pub_->msg_.data[9] = lfoot_swing_trajectory_.vel(cur_phase_time).x();
+            foot_poses_pub_->msg_.data[10] = lfoot_swing_trajectory_.vel(cur_phase_time).y();
+            foot_poses_pub_->msg_.data[11] = lfoot_swing_trajectory_.vel(cur_phase_time).z();
+        }
+        foot_poses_pub_->unlockAndPublish();
     }
 
   // update internal time
