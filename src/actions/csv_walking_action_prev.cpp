@@ -68,7 +68,7 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
     ros::Duration(10).sleep();
 
     // ros service
-    ros::ServiceServer trigger_service_server = nh.advertiseService("trigger", &CSVWALKINGActionPrev::triggerCallback, this);
+    trigger_service_server_ = nh.advertiseService("trigger", &CSVWALKINGActionPrev::triggerCallback, this);
 
 
     return true;

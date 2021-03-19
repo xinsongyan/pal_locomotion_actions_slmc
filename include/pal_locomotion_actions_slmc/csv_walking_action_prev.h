@@ -163,7 +163,7 @@ private:
 
   int pre_phase_index_;
 
-
+    ros::ServiceServer trigger_service_server_;
 };
 }
 
