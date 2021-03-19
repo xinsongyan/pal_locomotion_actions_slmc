@@ -51,11 +51,18 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
       "dcm_rate_limiter", nh, bc_->getControllerDt(), parameters_.hpl_paramters_));
 
 
-
+    // ros service
+    ros::ServiceServer trigger_service_server = nh.advertiseService("trigger", &CSVWALKINGActionPrev::triggerCallback, this);
 
 
     return true;
 }
+
+bool CSVWALKINGActionPrev::triggerCallback(std_srvs::Trigger::Request  &req, std_srvs::Trigger::Response &res){
+    ROS_INFO("Trigger request!");
+    return true;
+}
+
 
 void CSVWALKINGActionPrev::getSwingHeightFromRosParam(const ros::NodeHandle &nh){
     std::string key;
