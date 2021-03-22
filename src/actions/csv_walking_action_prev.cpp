@@ -70,7 +70,7 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
     // ROS_INFO_STREAM( "sleep 20!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     // ros::Duration(10).sleep();
     // ROS_INFO_STREAM( "sleep 10!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    ros::Duration(10).sleep();
+    // ros::Duration(10).sleep();
 
     return true;
 }
@@ -81,6 +81,7 @@ bool CSVWALKINGActionPrev::triggerCallback(std_srvs::Trigger::Request  &req, std
     getZmpTrajectoryFromRosParam(*nh_);
     getSwingHeightFromRosParam(*nh_);
     getComGainFromRosParam(*nh_);
+    internal_time_.fromSec(0);
     return true;
 }
 
