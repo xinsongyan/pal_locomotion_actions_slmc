@@ -32,6 +32,9 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
                                 const property_bag::PropertyBag &pb)
 {
     ROS_INFO_STREAM( "CSVWALKINGActionPrev::configure()");
+
+    nh_ = &nh;
+
   bc_ = bController;
 
 
@@ -44,8 +47,6 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
 //    ROS_INFO_STREAM( "swing_height_:" << swing_height_);
 
     getTrajectoryFromRosParam(nh, "com", com_traj_);
-//    getTrajectoryFromRosParam(nh, "lfoot", lfoot_traj_);
-//    getTrajectoryFromRosParam(nh, "rfoot", rfoot_traj_);
     getZmpTrajectoryFromRosParam(nh);
     getSwingHeightFromRosParam(nh);
     getComGainFromRosParam(nh);
@@ -59,6 +60,10 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
     rate_limiter_.reset(new HighPassRateLimiterVector2d(
       "dcm_rate_limiter", nh, bc_->getControllerDt(), parameters_.hpl_paramters_));
 
+    // ros service
+    trigger_service_server_ = nh.advertiseService("trigger", &CSVWALKINGActionPrev::triggerCallback, this);
+
+    trigger_ = false;
 
     // ROS_INFO_STREAM( "sleep 30!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     // ros::Duration(10).sleep();
@@ -67,15 +72,15 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
     // ROS_INFO_STREAM( "sleep 10!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     ros::Duration(10).sleep();
 
-    // ros service
-    trigger_service_server_ = nh.advertiseService("trigger", &CSVWALKINGActionPrev::triggerCallback, this);
-
-
     return true;
 }
 
 bool CSVWALKINGActionPrev::triggerCallback(std_srvs::Trigger::Request  &req, std_srvs::Trigger::Response &res){
-    ROS_INFO("Trigger request!");
+    ROS_INFO_STREAM("Trigger request!");
+    getTrajectoryFromRosParam(*nh_, "com", com_traj_);
+    getZmpTrajectoryFromRosParam(*nh_);
+    getSwingHeightFromRosParam(*nh_);
+    getComGainFromRosParam(*nh_);
     return true;
 }
 
@@ -89,6 +94,7 @@ void CSVWALKINGActionPrev::getSwingHeightFromRosParam(const ros::NodeHandle &nh)
         ROS_INFO_STREAM("Fail to load " + key);
     }
 }
+
 
 void CSVWALKINGActionPrev::getComGainFromRosParam(const ros::NodeHandle &nh){
     if (nh.getParam("/com_gain/com_fb_kp", com_fb_kp_)){ROS_INFO_STREAM("Successfully load /com_gain/com_fb_kp");}else{ROS_INFO_STREAM("Fail to load /com_gain/com_fb_kp");}
@@ -333,7 +339,6 @@ bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
 bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
 {
 //    ROS_INFO_STREAM( "CSVWALKINGActionPrev::cycleHook()");
-
 
   int count = int(internal_time_.toSec()/dt_.toSec());
   if (count > com_traj_.time.size()-1) {

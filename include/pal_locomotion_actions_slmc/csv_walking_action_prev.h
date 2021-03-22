@@ -17,6 +17,7 @@
 
 #include "std_srvs/Trigger.h"
 
+#include <boost/bind.hpp>
 
 namespace pal_locomotion
 {
@@ -107,6 +108,7 @@ public:
 
 private:
 
+  ros::NodeHandle *nh_;
 
   BController *bc_;
 
@@ -163,7 +165,9 @@ private:
 
   int pre_phase_index_;
 
-    ros::ServiceServer trigger_service_server_;
+  // trigger service
+  ros::ServiceServer trigger_service_server_;
+  bool trigger_;
 };
 }
 
