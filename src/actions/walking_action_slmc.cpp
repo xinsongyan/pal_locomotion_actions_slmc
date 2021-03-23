@@ -312,7 +312,6 @@ bool WALKINGActionSLMC::enterHook(const ros::Time &time)
     bc_->setHybridControlFactor("leg_right_5_joint", 1.);
     bc_->setHybridControlFactor("leg_right_6_joint", 1.);
 
-
     ini_com_pos_ = bc_->getActualCOMPosition();
     ini_lf_pose_ = bc_->getActualFootPose(+Side::LEFT);
     ini_rf_pose_ = bc_->getActualFootPose(+Side::RIGHT);
@@ -322,12 +321,8 @@ bool WALKINGActionSLMC::enterHook(const ros::Time &time)
     ROS_INFO_STREAM( "ini_rf_pose_:" << ini_rf_pose_.translation().transpose());
     ROS_INFO_STREAM( "ini_local_pose_:" << ini_local_pose_.translation());
 
-
-
   return true;
 }
-
-
 
 bool WALKINGActionSLMC::cycleHook(const ros::Time &time)
 {
@@ -364,18 +359,9 @@ bool WALKINGActionSLMC::cycleHook(const ros::Time &time)
     double cur_phase_time =  cur_phase_duration - (support_end_times_(cur_phase_index)-internal_time_.toSec());
     // ROS_INFO_STREAM( "cur_phase_time:" << cur_phase_time);
 
-
-
-
-
-
-
     eVector3 targetCOM_pos, targetCOM_vel, targetCOM_acc;
     eVector2 global_target_cop;
 
-    // targetCOM_pos = ini_com_pos_;
-    // targetCOM_pos.x() = com_traj_.pos.col(count)[0];
-    // targetCOM_pos.y() = com_traj_.pos.col(count)[1];
     targetCOM_pos = com_traj_.pos.col(count);
     targetCOM_vel = com_traj_.vel.col(count);
     targetCOM_acc = com_traj_.acc.col(count);
@@ -386,11 +372,11 @@ bool WALKINGActionSLMC::cycleHook(const ros::Time &time)
 
     double w = sqrt(bc_->getParameters()->gravity_ / bc_->getParameters()->z_height_);
     // ROS_INFO_STREAM("w is " << w);
-    eVector2 global_target_dcm = targetCOM_pos.head(2) + targetCOM_vel.head(2) / w;
+    // eVector2 global_target_dcm = targetCOM_pos.head(2) + targetCOM_vel.head(2) / w;
     // ROS_INFO_STREAM("global target dcm is " << global_target_dcm);
-    global_target_cop = global_target_dcm;
+    // global_target_cop = global_target_dcm;
     // ROS_INFO_STREAM("global_target_cop 1 is " << global_target_cop);
-    global_target_cop = eVector2(zmp_x_(count), zmp_y_(count));
+    // global_target_cop = eVector2(zmp_x_(count), zmp_y_(count));
     // ROS_INFO_STREAM("global_target_cop 2 is " << global_target_cop);
 
 
@@ -424,39 +410,17 @@ bool WALKINGActionSLMC::cycleHook(const ros::Time &time)
 //    bc_->setDesiredCOPComputed(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
 
 
-
-
     if (cur_support_index == 0) // double support
     {
-
-//        bc_->setDesiredCOMPosition(targetCOM_pos);
-//        bc_->setDesiredCOMVelocity(targetCOM_vel);
-//        bc_->setDesiredCOMAcceleration(targetCOM_acc);
-//        bc_->setDesiredCOPReference(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
-//        bc_->setDesiredCOPComputed(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
-
         bc_->setWeightDistribution(0.5);
         bc_->setActualSupportType(SupporType::DS);
         bc_->setStanceLegIDs({Side::LEFT, Side::RIGHT});
         bc_->setSwingLegIDs({});
 
         // ROS_INFO_STREAM("DOUBLE SUPPORT !!!!!!!!!!!!!!!!!!!!!");
-
-
-
-
-
     }
     else if (cur_support_index == 1) // left support
     {
-//        global_target_cop = ini_lf_pose_.translation().head(2);
-//        bc_->setDesiredCOMPosition(targetCOM_pos);
-//        bc_->setDesiredCOMVelocity(targetCOM_vel);
-//        bc_->setDesiredCOMAcceleration(targetCOM_acc);
-//        bc_->setDesiredCOPReference(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
-//        bc_->setDesiredCOPComputed(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
-
-
         bc_->setWeightDistribution(1.0);
         bc_->setActualSupportType(SupporType::SS);
         bc_->setStanceLegIDs({Side::LEFT});
@@ -494,22 +458,9 @@ bool WALKINGActionSLMC::cycleHook(const ros::Time &time)
                                  eVector3(0,0,0),
                                  eVector3(0,0,0));
 
-
-
-
     }
     else if (cur_support_index == -1) // right support
     {
-
-
-//        global_target_cop = ini_rf_pose_.translation().head(2);
-//        bc_->setDesiredCOMPosition(targetCOM_pos);
-//        bc_->setDesiredCOMVelocity(targetCOM_vel);
-//        bc_->setDesiredCOMAcceleration(targetCOM_acc);
-//        bc_->setDesiredCOPReference(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
-//        bc_->setDesiredCOPComputed(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
-
-
         bc_->setWeightDistribution(0.0);
         bc_->setActualSupportType(SupporType::SS);
         bc_->setStanceLegIDs({Side::RIGHT});
@@ -565,8 +516,8 @@ bool WALKINGActionSLMC::cycleHook(const ros::Time &time)
 
 
 
-  bc_->setDesiredBaseOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
-  bc_->setDesiredTorsoOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
+    bc_->setDesiredBaseOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
+    bc_->setDesiredTorsoOrientation(eQuaternion(matrixRollPitchYaw(0., 0., 0)));
 
     if (com_states_pub_ && com_states_pub_->trylock())
     {
