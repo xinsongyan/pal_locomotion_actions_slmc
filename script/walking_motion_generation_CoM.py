@@ -1,9 +1,14 @@
 import time
 import casadi
 from casadi import *
-from utils.trajectory import SwingTrajectory, CoMTrajectory
-from utils.pybullet_debug_plot import *
+import sys
+import os
+path = os.path.abspath(os.getcwd())
+sys.path.append(path+'/utils')
+from trajectory import SwingTrajectory, CoMTrajectory
+from pybullet_debug_plot import *
 import matplotlib.pyplot as plt
+
 np.set_printoptions(precision=3, suppress=True)
 
 
@@ -333,11 +338,11 @@ class ComMotionPlanner:
 
     def plan(self, cur_com_pos, cur_com_vel, cur_lfoot_pos, cur_rfoot_pos, cmd_vel=np.array([0,0,0]), ini_DS=True, fin_DS=True, support_indexes=False, support_durations=False, plot=False):
 
-        if support_indexes == False:
-            self.support_indexes = self.generate_support_indexes(cur_com_vel, self.num_of_phases, ini_DS=ini_DS, fin_DS=fin_DS)
-        else:
-            self.support_indexes = support_indexes
-
+        # if support_indexes == False:
+        #     self.support_indexes = self.generate_support_indexes(cur_com_vel, self.num_of_phases, ini_DS=ini_DS, fin_DS=fin_DS)
+        # else:
+        #     self.support_indexes = support_indexes
+        self.support_indexes = support_indexes
         if support_durations == False:
             self.support_durations = self.generate_support_durations(self.support_indexes)
         else:
@@ -592,7 +597,7 @@ if __name__ == "__main__":
 
 
 
-    support_indexes = [0,1,0,-1,0,1,0,-1,0]
+    support_indexes = np.array([0,1,0,-1,0,1,0,-1,0])
     num_of_phases = len(support_indexes)
 
     robot_param = {'m':1,
@@ -600,15 +605,15 @@ if __name__ == "__main__":
                    'foot_length':0.2,
                    'foot_width':0.1,
                    'norminal_com_height':0.8,
-                   'single_support_duration': 0.8,
-                   'double_support_duration': 0.2}
+                   'single_support_duration': 1.0,
+                   'double_support_duration': 1.0}
     com_motion_planner = ComMotionPlanner(num_of_phases=num_of_phases, robot_param=robot_param, segments_per_phase=10,)
 
 
     com_motion_planner.plan(cur_com_pos=[0.0, 0.0, 0.8],
                             cur_com_vel=[0.0, 0.0, 0.0],
-                            cur_lfoot_pos=[0, 0.1, 0.0],
-                            cur_rfoot_pos=[0, -0.1, 0],
+                            cur_lfoot_pos=[0, 0.085, 0.0],
+                            cur_rfoot_pos=[0, -0.085, 0],
                             cmd_vel=np.array([0.5, 0.0, 0.0, 0.0, 0.0, 0.0]),
                             support_indexes=support_indexes,
                             plot=False)
@@ -625,12 +630,28 @@ if __name__ == "__main__":
 
 
     # plot com trajectory
-    addDebugTrajectory3D(com_trajectory.pos, color=red)
-    addDebugTrajectory2D(com_trajectory.pos, color=red)
+    # addDebugTrajectory3D(com_trajectory.pos, color=red)
+    # addDebugTrajectory2D(com_trajectory.pos, color=red)
+
+    import trajectory_publisher
+
+    swing_height = 0.15
+    com_gain = [30.0, 5.0, 0.0]
+    foot_placement = np.hstack((left_foot_positions, right_foot_positions))
+    print("Foot placemnt is ", foot_placement)
+
+    com_traj_tmp = com_trajectory.get_trajectory_array(dt=0.002)
+    trajectory_publisher.publish_all(com_traj_tmp,
+                                     support_durations,
+                                     support_indexes,
+                                     foot_placement,
+                                     swing_height,
+                                     com_gain)
 
 
-    while (pybullet.isConnected()):
-        pass
+    print("end!!!!!!!!!!!")
+    # while (pybullet.isConnected()):
+    #     pass
 
 
 

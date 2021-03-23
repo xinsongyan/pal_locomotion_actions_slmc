@@ -43,7 +43,7 @@ bool WALKINGActionSLMC::configure(ros::NodeHandle &nh, BController *bController,
     n_foot_poses_ = 12;
 
     getTrajectoryFromRosParam(nh, "com", com_traj_);
-    getZmpTrajectoryFromRosParam(nh);
+    // getZmpTrajectoryFromRosParam(nh);
     getSwingHeightFromRosParam(nh);
     getComGainFromRosParam(nh);
 
@@ -70,7 +70,7 @@ bool WALKINGActionSLMC::configure(ros::NodeHandle &nh, BController *bController,
 bool WALKINGActionSLMC::triggerCallback(std_srvs::Trigger::Request  &req, std_srvs::Trigger::Response &res){
     ROS_INFO_STREAM("Trigger request!");
     getTrajectoryFromRosParam(*nh_, "com", com_traj_);
-    getZmpTrajectoryFromRosParam(*nh_);
+    // getZmpTrajectoryFromRosParam(*nh_);
     getSwingHeightFromRosParam(*nh_);
     getComGainFromRosParam(*nh_);
     internal_time_.fromSec(0);
@@ -408,7 +408,6 @@ bool WALKINGActionSLMC::cycleHook(const ros::Time &time)
 //    bc_->setDesiredICP(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
 //    bc_->setDesiredCOPReference(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
 //    bc_->setDesiredCOPComputed(eVector3(global_target_cop.x(), global_target_cop.y(), 0.));
-
 
     if (cur_support_index == 0) // double support
     {

@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.interpolate import CubicSpline, UnivariateSpline, interp1d
 # from pybullet_debug_plot import *
-from script.utils.pybullet_debug_plot import *
+from pybullet_debug_plot import *
 
 class CoMTrajectory:
     def __init__(self, time, pos, vel=None, acc=None, debug_plot=True):
