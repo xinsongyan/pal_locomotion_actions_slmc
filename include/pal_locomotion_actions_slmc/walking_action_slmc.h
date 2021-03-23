@@ -1,11 +1,10 @@
 
-#ifndef _CSV_WALKING_ACTION_PREV_
-#define _CSV_WALKING_ACTION_PREV_
+#ifndef _WALKING_ACTION_SLMC_
+#define _WALKING_ACTION_SLMC_
 
 #include <pal_locomotion/state_machine/walking_action_base.h>
 #include <pal_ros_utils/reference/pose/pose_reference_minjerk.h>
 #include <pal_ros_utils/reference/pose/pose_reference_minjerk_topic.h>
-//#include <pal_locomotion_actions_slmc/csv_utils.h>
 
 // For realtime publisher and subscriber
 #include <realtime_tools/realtime_publisher.h>
@@ -24,9 +23,9 @@ namespace pal_locomotion
 
 
 
-struct CSVWALKINGActionPrevParameters
+struct WALKINGActionSLMCParameters
 {
-  CSVWALKINGActionPrevParameters()
+  WALKINGActionSLMCParameters()
   {
     setDefaults();
   }
@@ -45,26 +44,6 @@ struct CSVWALKINGActionPrevParameters
   math_utils::HighPassRateLimiterParameters hpl_paramters_;
 };
 
-struct TrajectoryFromCSV2 {
-    TrajectoryFromCSV2(){};
-    ~TrajectoryFromCSV2(){};
-
-    public:
-      Eigen::VectorXd time;
-      Eigen::MatrixXd pos;
-      Eigen::MatrixXd vel;
-      Eigen::MatrixXd acc;
-};
-
-struct ContactSequenceFromCSV2 {
-    ContactSequenceFromCSV2(){};
-    ~ContactSequenceFromCSV2(){};
-
-    public:
-      Eigen::VectorXd time;
-      Eigen::VectorXd type;
-};
-
 struct Trajectory{
         Eigen::VectorXd time;
         Eigen::MatrixXd pos;
@@ -72,12 +51,12 @@ struct Trajectory{
         Eigen::MatrixXd acc;
 };
 
-class CSVWALKINGActionPrev : public WalkingActionBase
+class WALKINGActionSLMC : public WalkingActionBase
 {
 public:
-  CSVWALKINGActionPrev();
+  WALKINGActionSLMC();
 
-  virtual ~CSVWALKINGActionPrev();
+  virtual ~WALKINGActionSLMC();
 
   bool configure(ros::NodeHandle &nh, BController *bController,
                  const property_bag::PropertyBag &parameters) override;
@@ -116,7 +95,7 @@ private:
   ros::Duration dt_;
 
 
-  CSVWALKINGActionPrevParameters parameters_;
+  WALKINGActionSLMCParameters parameters_;
 
   std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>> com_states_pub_;
   std::shared_ptr<realtime_tools::RealtimePublisher<std_msgs::Float64MultiArray>> foot_poses_pub_;

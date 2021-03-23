@@ -1,27 +1,9 @@
 <library path="lib/libpal_locomotion_actions_slmc_plugins">
 
-  <class name="pal_locomotion::CSVCOMAction" type="pal_locomotion::CSVCOMAction" base_class_type="pal_locomotion::WalkingActionBase">
+  <class name="pal_locomotion::WALKINGActionSLMC" type="pal_locomotion::WALKINGActionSLMC" base_class_type="pal_locomotion::WalkingActionBase">
     <description>
     Action
   </description>
-  </class>
-
-  <class name="pal_locomotion::CSVWALKINGAction" type="pal_locomotion::CSVWALKINGAction" base_class_type="pal_locomotion::WalkingActionBase">
-    <description>
-    Action
-  </description>
-  </class>
-
-  <class name="pal_locomotion::CSVWALKINGActionPrev" type="pal_locomotion::CSVWALKINGActionPrev" base_class_type="pal_locomotion::WalkingActionBase">
-    <description>
-    Action
-  </description>
-  </class>
-
-  <class name="pal_locomotion::SingleLegStandAction" type="pal_locomotion::SingleLegStandAction" base_class_type="pal_locomotion::WalkingActionBase">
-    <description>
-      Action
-    </description>
   </class>
 
 </library>

@@ -1,4 +1,4 @@
-#include <pal_locomotion_actions_slmc/csv_walking_action_prev.h>
+#include <pal_locomotion_actions_slmc/walking_action_slmc.h>
 #include <pal_locomotion_actions_slmc/icp_control_utils.h>
 #include <math_utils/geometry_tools.h>
 
@@ -16,7 +16,7 @@ using namespace pal_robot_tools;
 
 namespace pal_locomotion
 {
-CSVWALKINGActionPrev::CSVWALKINGActionPrev()
+WALKINGActionSLMC::WALKINGActionSLMC()
   : internal_time_(ros::Time(0)),
     lfoot_swing_trajec_generated(false),
     rfoot_swing_trajec_generated(false)
@@ -24,27 +24,23 @@ CSVWALKINGActionPrev::CSVWALKINGActionPrev()
     pre_phase_index_=-1;
 }
 
-CSVWALKINGActionPrev::~CSVWALKINGActionPrev()
+WALKINGActionSLMC::~WALKINGActionSLMC()
 {
 }
 
-bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bController,
+bool WALKINGActionSLMC::configure(ros::NodeHandle &nh, BController *bController,
                                 const property_bag::PropertyBag &pb)
 {
-    ROS_INFO_STREAM( "CSVWALKINGActionPrev::configure()");
+    ROS_INFO_STREAM( "WALKINGActionSLMC::configure()");
 
     nh_ = &nh;
 
-  bc_ = bController;
-
-
+    bc_ = bController;
     dt_ = bc_->getControllerDt();
     ROS_INFO_STREAM( "dt_:" << dt_.toSec());
 
     n_com_states_ = 6;
     n_foot_poses_ = 12;
-
-//    ROS_INFO_STREAM( "swing_height_:" << swing_height_);
 
     getTrajectoryFromRosParam(nh, "com", com_traj_);
     getZmpTrajectoryFromRosParam(nh);
@@ -61,21 +57,17 @@ bool CSVWALKINGActionPrev::configure(ros::NodeHandle &nh, BController *bControll
       "dcm_rate_limiter", nh, bc_->getControllerDt(), parameters_.hpl_paramters_));
 
     // ros service
-    trigger_service_server_ = nh.advertiseService("trigger", &CSVWALKINGActionPrev::triggerCallback, this);
+    trigger_service_server_ = nh.advertiseService("trigger", &WALKINGActionSLMC::triggerCallback, this);
 
     trigger_ = false;
 
-    // ROS_INFO_STREAM( "sleep 30!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    // ros::Duration(10).sleep();
-    // ROS_INFO_STREAM( "sleep 20!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    // ros::Duration(10).sleep();
     // ROS_INFO_STREAM( "sleep 10!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     // ros::Duration(10).sleep();
 
     return true;
 }
 
-bool CSVWALKINGActionPrev::triggerCallback(std_srvs::Trigger::Request  &req, std_srvs::Trigger::Response &res){
+bool WALKINGActionSLMC::triggerCallback(std_srvs::Trigger::Request  &req, std_srvs::Trigger::Response &res){
     ROS_INFO_STREAM("Trigger request!");
     getTrajectoryFromRosParam(*nh_, "com", com_traj_);
     getZmpTrajectoryFromRosParam(*nh_);
@@ -86,7 +78,7 @@ bool CSVWALKINGActionPrev::triggerCallback(std_srvs::Trigger::Request  &req, std
 }
 
 
-void CSVWALKINGActionPrev::getSwingHeightFromRosParam(const ros::NodeHandle &nh){
+void WALKINGActionSLMC::getSwingHeightFromRosParam(const ros::NodeHandle &nh){
     std::string key;
     key = "/swing_height";
     if (nh.getParam(key, swing_height_)){
@@ -97,13 +89,13 @@ void CSVWALKINGActionPrev::getSwingHeightFromRosParam(const ros::NodeHandle &nh)
 }
 
 
-void CSVWALKINGActionPrev::getComGainFromRosParam(const ros::NodeHandle &nh){
+void WALKINGActionSLMC::getComGainFromRosParam(const ros::NodeHandle &nh){
     if (nh.getParam("/com_gain/com_fb_kp", com_fb_kp_)){ROS_INFO_STREAM("Successfully load /com_gain/com_fb_kp");}else{ROS_INFO_STREAM("Fail to load /com_gain/com_fb_kp");}
     if (nh.getParam("/com_gain/com_fb_kd", com_fb_kd_)){ROS_INFO_STREAM("Successfully load /com_gain/com_fb_kd");}else{ROS_INFO_STREAM("Fail to load /com_gain/com_fb_kd");}
     if (nh.getParam("/com_gain/com_ff_kp", com_ff_kp_)){ROS_INFO_STREAM("Successfully load /com_gain/com_ff_kp");}else{ROS_INFO_STREAM("Fail to load /com_gain/com_ff_kp");}
 }
 
-void CSVWALKINGActionPrev::getZmpTrajectoryFromRosParam(const ros::NodeHandle &nh){
+void WALKINGActionSLMC::getZmpTrajectoryFromRosParam(const ros::NodeHandle &nh){
     std::string key;
     key = "/zmp_trajectory/t";
     std::vector<double> std_zmp_t;
@@ -147,7 +139,7 @@ void CSVWALKINGActionPrev::getZmpTrajectoryFromRosParam(const ros::NodeHandle &n
     zmp_z_ = eigen_zmp_z;
 }
 
-void CSVWALKINGActionPrev::getTrajectoryFromRosParam(const ros::NodeHandle &nh, const std::string & name, Trajectory & traj){
+void WALKINGActionSLMC::getTrajectoryFromRosParam(const ros::NodeHandle &nh, const std::string & name, Trajectory & traj){
     std::vector<double> trajectory_t_;
     std::vector<double> trajectory_pos_x_;
     std::vector<double> trajectory_pos_y_;
@@ -303,22 +295,22 @@ void CSVWALKINGActionPrev::getTrajectoryFromRosParam(const ros::NodeHandle &nh, 
 }
 
 
-bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
+bool WALKINGActionSLMC::enterHook(const ros::Time &time)
 {
-    ROS_INFO_STREAM( "CSVWALKINGActionPrev::enterHook()");
+    ROS_INFO_STREAM( "WALKINGActionSLMC::enterHook()");
 
-  bc_->setHybridControlFactor("leg_left_1_joint", 1.);
-  bc_->setHybridControlFactor("leg_left_2_joint", 1.);
-  bc_->setHybridControlFactor("leg_left_3_joint", 1.);
-  bc_->setHybridControlFactor("leg_left_4_joint", 1.);
-  bc_->setHybridControlFactor("leg_left_5_joint", 1.);
-  bc_->setHybridControlFactor("leg_left_6_joint", 1.);
-  bc_->setHybridControlFactor("leg_right_1_joint", 1.);
-  bc_->setHybridControlFactor("leg_right_2_joint", 1.);
-  bc_->setHybridControlFactor("leg_right_3_joint", 1.);
-  bc_->setHybridControlFactor("leg_right_4_joint", 1.);
-  bc_->setHybridControlFactor("leg_right_5_joint", 1.);
-  bc_->setHybridControlFactor("leg_right_6_joint", 1.);
+    bc_->setHybridControlFactor("leg_left_1_joint", 1.);
+    bc_->setHybridControlFactor("leg_left_2_joint", 1.);
+    bc_->setHybridControlFactor("leg_left_3_joint", 1.);
+    bc_->setHybridControlFactor("leg_left_4_joint", 1.);
+    bc_->setHybridControlFactor("leg_left_5_joint", 1.);
+    bc_->setHybridControlFactor("leg_left_6_joint", 1.);
+    bc_->setHybridControlFactor("leg_right_1_joint", 1.);
+    bc_->setHybridControlFactor("leg_right_2_joint", 1.);
+    bc_->setHybridControlFactor("leg_right_3_joint", 1.);
+    bc_->setHybridControlFactor("leg_right_4_joint", 1.);
+    bc_->setHybridControlFactor("leg_right_5_joint", 1.);
+    bc_->setHybridControlFactor("leg_right_6_joint", 1.);
 
 
     ini_com_pos_ = bc_->getActualCOMPosition();
@@ -337,9 +329,9 @@ bool CSVWALKINGActionPrev::enterHook(const ros::Time &time)
 
 
 
-bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
+bool WALKINGActionSLMC::cycleHook(const ros::Time &time)
 {
-//    ROS_INFO_STREAM( "CSVWALKINGActionPrev::cycleHook()");
+//    ROS_INFO_STREAM( "WALKINGActionSLMC::cycleHook()");
 
   int count = int(internal_time_.toSec()/dt_.toSec());
   if (count > com_traj_.time.size()-1) {
@@ -635,7 +627,7 @@ bool CSVWALKINGActionPrev::cycleHook(const ros::Time &time)
   return true;
 }
 
-bool CSVWALKINGActionPrev::isOverHook(const ros::Time &time)
+bool WALKINGActionSLMC::isOverHook(const ros::Time &time)
 {
   if (bc_->getStateMachine()->queue_size() > 1)
   {
@@ -644,18 +636,18 @@ bool CSVWALKINGActionPrev::isOverHook(const ros::Time &time)
   return false;
 }
 
-bool CSVWALKINGActionPrev::endHook(const ros::Time &time)
+bool WALKINGActionSLMC::endHook(const ros::Time &time)
 {
   return true;
 }
 
-Eigen::VectorXd CSVWALKINGActionPrev::std2eigen(std::vector<double> std_vec){
+Eigen::VectorXd WALKINGActionSLMC::std2eigen(std::vector<double> std_vec){
     Eigen::VectorXd eigen_vec = Eigen::Map<Eigen::VectorXd>(std_vec.data(), std_vec.size());
     return eigen_vec;
 }
 
 
-Eigen::MatrixXd CSVWALKINGActionPrev::stdVector2EigenMatrixXd(std::vector<double> std_vec, int row, int col){
+Eigen::MatrixXd WALKINGActionSLMC::stdVector2EigenMatrixXd(std::vector<double> std_vec, int row, int col){
     Eigen::MatrixXd eigen_mat = Eigen::Map<Eigen::MatrixXd>(std_vec.data(), col, row).transpose();
     return eigen_mat;
 }

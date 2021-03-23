@@ -2,7 +2,7 @@
 <package format="2">
   <name>pal_locomotion_actions_slmc</name>
   <version>0.3.1</version>
-  <description>The pal_locomotion_actions package</description>
+  <description>The pal_locomotion_actions slmc package</description>
 
   <maintainer email="ggory15@gmail.com">Sanghyun Kim</maintainer>
 

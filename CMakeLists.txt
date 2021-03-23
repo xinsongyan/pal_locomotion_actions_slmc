@@ -29,8 +29,8 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 #add_executable(start_wbc_action src/start_wbc_action.cpp)
 #target_link_libraries(start_wbc_action ${catkin_LIBRARIES})
 
-add_executable(add_two_ints_server src/service/trigger_server_node.cpp)
-target_link_libraries(add_two_ints_server ${catkin_LIBRARIES})
+#add_executable(add_two_ints_server src/service/trigger_server_node.cpp)
+#target_link_libraries(add_two_ints_server ${catkin_LIBRARIES})
 
 
 install(TARGETS ${PROJECT_NAME}
