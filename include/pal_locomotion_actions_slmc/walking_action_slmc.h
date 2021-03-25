@@ -115,6 +115,8 @@ private:
     Eigen::MatrixXd support_indexes_;
     Eigen::MatrixXd support_end_times_;
     Eigen::MatrixXd foot_placements_;
+    Eigen::MatrixXd foot_orientations_;
+
     int num_of_phases_;
 
 
@@ -127,6 +129,8 @@ private:
   // robot initial state
   eVector3 ini_com_pos_;
   eVector3 current_com_pos_;
+  eVector3 targetCOM_pos, targetCOM_vel, targetCOM_acc;
+
   std::vector<eVector3> des_foot_pos_;
   eMatrixHom actual_lf_pose, actual_rf_pose;
   std::pair<eVector3, eVector3> actual_lf_vel, actual_rf_vel;
@@ -134,7 +138,10 @@ private:
   eMatrixHom ini_local_pose_;
 
   double swing_height_;
-
+  int cur_support_index;
+  double cur_phase_duration;
+  double cur_phase_time;
+  
   double n_com_states_;
   double n_foot_poses_;
 
@@ -147,6 +154,8 @@ private:
   // trigger service
   ros::ServiceServer trigger_service_server_;
   bool trigger_;
+
+  const double com_height_default_ = 0.88;
 };
 }
 

@@ -9,6 +9,13 @@ def publish_footplacements(footplacements, param_name):
     rospy.set_param('/'+param_name, dict)
     # print('data name is ', footplacements)
 
+def publish_footorientations(footorientations, param_name):
+    dict={'data':footorientations.flatten().tolist(),
+                     'row_number': footorientations.shape[0],
+                     'col_number': footorientations.shape[1]}
+    rospy.set_param('/'+param_name, dict)
+    # print('footorientations is ', footorientations)
+
 def publish_com_trajectory(trajectory, param_name):
     trajectory_dict={'t':trajectory[:,0].tolist(),
                      'pos':{'x':trajectory[:,1].tolist(),
@@ -48,7 +55,7 @@ def publish_gains(param_name, com_gain):
     rospy.set_param('/'+param_name+'/com_ff_kp', com_gain[2])
 
 
-def publish_all(com_trajectory, support_durations, support_indexes, foot_placements, swing_height, com_gain):
+def publish_all(com_trajectory, support_durations, support_indexes, foot_placements, foot_orientations, swing_height, com_gain):
     try:
         while not rospy.is_shutdown():
             publish_com_trajectory(trajectory=com_trajectory, param_name='com_trajectory')
@@ -56,6 +63,7 @@ def publish_all(com_trajectory, support_durations, support_indexes, foot_placeme
             publish_support_end_times(support_durations=support_durations, param_name='support_end_times')
             publish_support_indexes(support_indexes=support_indexes, param_name='support_indexes')
             publish_footplacements(footplacements=foot_placements, param_name='foot_placements')
+            publish_footorientations(footorientations=foot_orientations, param_name='foot_orientations')
             publish_swing_height(swing_height=swing_height, param_name='swing_height')
             publish_gains(com_gain=com_gain, param_name='com_gain')
             break

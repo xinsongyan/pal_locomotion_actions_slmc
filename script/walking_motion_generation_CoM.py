@@ -604,22 +604,29 @@ if __name__ == "__main__":
                    'g':9.81,
                    'foot_length':0.2,
                    'foot_width':0.1,
-                   'norminal_com_height':0.8,
+                   'norminal_com_height':0.88,
                    'single_support_duration': 1.0,
                    'double_support_duration': 1.0}
     com_motion_planner = ComMotionPlanner(num_of_phases=num_of_phases, robot_param=robot_param, segments_per_phase=10,)
 
 
-    com_motion_planner.plan(cur_com_pos=[0.0, 0.0, 0.8],
+    com_motion_planner.plan(cur_com_pos=[0.3, 0.0, 0.88],
                             cur_com_vel=[0.0, 0.0, 0.0],
-                            cur_lfoot_pos=[0, 0.085, 0.0],
-                            cur_rfoot_pos=[0, -0.085, 0],
-                            cmd_vel=np.array([0.5, 0.0, 0.0, 0.0, 0.0, 0.0]),
+                            cur_lfoot_pos=[0.3, 0.085, 0.0],
+                            cur_rfoot_pos=[0.3, -0.085, 0],
+                            cmd_vel=np.array([0.2, 0.0, 0.0, 0.0, 0.0, 0.0]),
                             support_indexes=support_indexes,
                             plot=False)
 
     com_trajectory, left_foot_positions, right_foot_positions, support_indexes, support_durations = com_motion_planner.return_motion_plan()
     Hl, Hr = com_motion_planner.return_heading_angle()
+
+    # print(Hl)
+    # print(Hr)
+
+    foot_orientation = np.zeros((num_of_phases, 6))
+    foot_orientation[:, 2] = Hl
+    foot_orientation[:, 5] = Hr
 
 
     # plot footsteps
@@ -645,6 +652,7 @@ if __name__ == "__main__":
                                      support_durations,
                                      support_indexes,
                                      foot_placement,
+                                     foot_orientation,
                                      swing_height,
                                      com_gain)
 

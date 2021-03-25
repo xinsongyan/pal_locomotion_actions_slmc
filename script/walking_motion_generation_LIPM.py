@@ -25,7 +25,7 @@ support_durations = np.array([step_duration[int(abs(support_indexes[i]))] for i 
 support_durations_acm = np.concatenate(([0], np.cumsum(support_durations)))
 # get foot placement at each step: left_x, left_y, left_z, right_x, right_y, right_z
 
-x_offset = 0.6
+x_offset = 0.0
 foot_placement = np.zeros((6, support_indexes.size))
 
 # ---- Optimization problem ---------
